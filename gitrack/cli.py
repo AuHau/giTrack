@@ -2,7 +2,10 @@ import click
 
 from toggl import api
 
-from . import git
+from . import git, config
+
+
+# TODO: Handling --ammend
 
 
 def entrypoint(args, obj=None):
@@ -35,6 +38,7 @@ def stop(description):
 def init():
     repo = git.get_repo()
     git.intall_hook(repo)
+    config.Store.init_repo(repo)
 
 
 @cli.group(short_help='Git hooks invocations')

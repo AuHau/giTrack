@@ -3,7 +3,7 @@ import pathlib
 import typing
 
 
-def _has_git(check_dir):  # type: (pathlib.Path) -> bool
+def _folder_has_git(check_dir):  # type: (pathlib.Path) -> bool
     for child in check_dir.iterdir():
         if child.is_dir() and child.name == '.git':
             return True
@@ -18,7 +18,7 @@ def get_repo(current_dir=None):  # type: (typing.Optional[pathlib.Path]) -> git.
     if not current_dir.is_dir():
         current_dir = current_dir.parent
 
-    if _has_git(current_dir):
+    if _folder_has_git(current_dir):
         return git.Repo(str(current_dir))
 
     # When following IF is true we reached the root of dir tree
@@ -38,7 +38,8 @@ def intall_hook(repo):  # type: (git.Repo) -> None
         if new_file:
             file.writelines('#!/usr/bin/env bash\n')
 
-        file.writelines('\ngitrack hooks post-commit')
+        # TODO: Usage correct binary based on using virtualenv/pex/dev environment
+        file.writelines('\ngitrack hooks post-commit &')
 
     if new_file:
         post_commit_file.chmod(0o740)
