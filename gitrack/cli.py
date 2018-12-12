@@ -1,12 +1,11 @@
 import click
 
-from toggl import api
-
-from . import git, config
+from . import helpers, config
 
 
 # TODO: Handling --ammend
-
+# TODO: Parsing commit message/branch name for Task ID
+# TODO: Offline mode?
 
 def entrypoint(args, obj=None):
     """
@@ -18,27 +17,32 @@ def entrypoint(args, obj=None):
 @click.group()
 @click.pass_context
 def cli(ctx):
-    pass
+    repo = helpers.get_repo()
+    ctx.obj['repo'] = repo
+
+    if ctx.invoked_subcommand != 'init':
+        ctx.obj['config'] = config.Config(repo)
+        ctx.obj['provider'] = ctx.obj['config'].provider_class(ctx.obj['config'])
 
 
 @cli.command(short_help='Starts time tracking')
-def start():
-    api.TimeEntry.start_and_save()
+@click.pass_context
+def start(ctx):
+    ctx.obj['provider'].start()
 
 
 @cli.command(short_help='Stops time tracking')
 @click.option('--description', '-d', help='Description for the running time entry')
-def stop(description):
-    entry = api.TimeEntry.objects.current()  # type: api.TimeEntry
-    entry.description = description
-    entry.stop_and_save()
+@click.pass_context
+def stop(ctx, description):
+    ctx.obj['provider'].stop(description)
 
 
 @cli.command(short_help='Initialize Git repo for time tracking')
-def init():
-    repo = git.get_repo()
-    git.intall_hook(repo)
-    config.Store.init_repo(repo)
+@click.pass_context
+def init(ctx):
+    repo = ctx.obj['repo']
+    helpers.init(repo)
 
 
 @cli.group(short_help='Git hooks invocations')
@@ -50,11 +54,10 @@ def hooks(ctx):
 @hooks.command('post-commit', short_help='Post-commit git hook')
 @click.pass_context
 def hooks_post_commit(ctx):
-    repo = git.get_repo()
+    provider = ctx.obj['provider']
+    repo = ctx.obj['repo']
     commit = repo.head.commit
+    message = commit.message.strip()
 
-    entry = api.TimeEntry.objects.current()  # type: api.TimeEntry
-    entry.description = commit.message.strip()
-    entry.stop_and_save()
-
-    api.TimeEntry.start_and_save()
+    provider.stop(message)
+    provider.start()

@@ -2,3 +2,4 @@ gitpython==2.1.*
 click==7.*
 appdirs==1.4.*
 togglCli==2.0.0.0b1
+inquirer==2.*

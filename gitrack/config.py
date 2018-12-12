@@ -7,7 +7,7 @@ from collections import namedtuple
 import git
 import appdirs
 
-from . import exceptions, APP_NAME, LOCAL_CONFIG_NAME
+from . import exceptions, APP_NAME, LOCAL_CONFIG_NAME, PROVIDERS
 
 
 IniEntry = namedtuple('IniEntry', ['section', 'type'])
@@ -25,9 +25,14 @@ class IniConfig:
     entry the look continues with propagating the lookup to next in line, with super().
     """
 
-    def __init__(self, stores, **kwargs):  # type: (typing.Sequence[configparser.ConfigParser], **typing.Any) -> None
+    def __init__(self, stores, primary_store_index, **kwargs):  # type: (typing.Sequence[configparser.ConfigParser], int, **typing.Any) -> None
         self._stores = stores
+        self._primary_store_index = primary_store_index
         super().__init__(**kwargs)
+
+    @property
+    def _primary_store(self):
+        return self._stores[self._primary_store_index]
 
     def _resolve_type(self, store, entry, item):  # type: (configparser.ConfigParser, IniEntry, str) -> typing.Any
         """
@@ -59,13 +64,42 @@ class IniConfig:
 
         return super().__getattribute__(item)
 
-    @property
-    def is_loaded(self):  # type: () -> bool
+    def get_providers_config(self, provider_name):  # type: (str) -> typing.Dict
+        config = {}
+
+        # Reversed because local config should override global settings
+        for store in reversed(self._stores):
+            if store.has_section(provider_name):
+                config.update(dict(store.items(provider_name)))
+
+        return config
+
+    def set_providers_config(self, provider_name, items):  # type: (str, typing.Dict) -> None
+        store = self._primary_store
+        store.read_dict({provider_name: items})
+
+    def persist(self, path, items=None):  # type: (str, typing.Dict) -> None
         """
-        Method states if the config file associated with this config's instance was loaded. Eq. if the file exists,
-        is readable and was loaded into memory.
+        Method persists the Config's values which are related to IniConfigMixin (eq. are defined in the INI_MAPPING)
+        into config's file.
         """
-        return bool(self._loaded)
+        if items is None:
+            return
+
+        for item, value in items.items():
+            if item in self.INI_MAPPING:
+                section = self.INI_MAPPING[item].section
+
+                if not self._primary_store.has_section(section):
+                    self._primary_store.add_section(section)
+
+                if value is None:
+                    self._primary_store.remove_option(section, item)
+                else:
+                    self._primary_store.set(section, item, str(value))
+
+        with open(path, 'w') as config_file:
+            self._primary_store.write(config_file)
 
 
 class Config(IniConfig):
@@ -82,19 +116,19 @@ class Config(IniConfig):
 
     # Default values
 
-    datetime_format = 'LTS L'
+    provider = None
 
     INI_MAPPING = {
-        'api_token': IniEntry('auth', str),
+        'provider': IniEntry('gitrack', str),
     }
 
     def __init__(self, repo, **kwargs):  # type: (git.Repo, **typing.Any) -> None
         stores = (
-            self._load_store(pathlib.Path(appdirs.user_config_dir(APP_NAME)) / 'default.config'),
             self._load_store(pathlib.Path(repo.git_dir).parent / LOCAL_CONFIG_NAME),
+            self._load_store(pathlib.Path(appdirs.user_config_dir(APP_NAME)) / 'default.config'),
         )
 
-        super().__init__(stores)
+        super().__init__(stores, 0)
 
         self._store = Store(repo)
         self._store.load()
@@ -111,14 +145,32 @@ class Config(IniConfig):
     def store(self):
         return self._store
 
+    @property
+    def provider_class(self):
+        return PROVIDERS(self.provider).klass()
+
     @staticmethod
     def _load_store(path):  # type: (pathlib.Path) -> configparser.ConfigParser
-        store = configparser.ConfigParser()
+        store = configparser.ConfigParser(interpolation=None)
 
         if path.exists():
             store.read((str(path),))
 
         return store
+
+    def persist(self, path, items=None):  # type: (str, typing.Dict) -> None
+        """
+        Method that enables persist the config and its parent's parts (eq. IniConfig saves a file).
+        """
+        if items is None:
+            items = {}
+            for item, value in vars(self).items():
+                if item.isupper() or item[0] == '_' or (self._get_class_attribute(item) == value and value is not None):
+                    continue
+
+                items[item] = value
+
+        super().persist(path, items)
 
     def __getattribute__(self, item):  # type: (str) -> typing.Any
         """
@@ -130,8 +182,6 @@ class Config(IniConfig):
             retrieved_value = object.__getattribute__(self, item)
         except AttributeError:
             item_exists = False
-
-        print('{}: {}'.format(item, type(retrieved_value)))
 
         # We are not interested in special attributes (private attributes or constants, methods)
         # for the hierarchy lookup
@@ -151,14 +201,10 @@ class Config(IniConfig):
 class Store:
 
     def __init__(self, repo):  # type: (git.Repo) -> None
-        try:
-            name = repo.git_dir
-        except AttributeError:
-            name = str(repo)
-
+        name = self.repo_name(repo)
         path = pathlib.Path(appdirs.user_data_dir(APP_NAME)) / 'repos'
         path.mkdir(parents=True, exist_ok=True)
-        self._path = path / name + '.pickle'  # type: pathlib.Path
+        self._path = path / (name + '.pickle')  # type: pathlib.Path
 
         if not self._path.exists():
             raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!'.format(name))
@@ -166,19 +212,25 @@ class Store:
         self.data = {}
 
     def load(self):
-        with self._path.open('r') as file:
+        with self._path.open('rb') as file:
             self.data = pickle.load(file)
 
     def save(self):
-        with self._path.open('w') as file:
+        with self._path.open('wb') as file:
             pickle.dump(self.data, file)
+
+    @staticmethod
+    def repo_name(repo):
+        # TODO: Proper escaping of the path
+        # TODO: Check for too long strings
+        return repo.git_dir[1:].replace('/', '_').replace('_.git', '')
 
     @classmethod
     def init_repo(cls, repo):
-        name = repo.git_dir
+        name = cls.repo_name(repo)
         path = pathlib.Path(appdirs.user_data_dir(APP_NAME)) / 'repos'
         path.mkdir(parents=True, exist_ok=True)
-        repo_file = path / name + '.pickle'  # type: pathlib.Path
+        repo_file = path / (name + '.pickle')  # type: pathlib.Path
 
-        with repo_file.open('w') as file:
+        with repo_file.open('wb') as file:
             pickle.dump({}, file)
