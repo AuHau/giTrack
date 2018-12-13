@@ -278,6 +278,13 @@ class Store:
         return repo.git_dir[1:].replace('/', '_').replace('_.git', '')
 
     @classmethod
+    def is_repo_initialized(cls, repo):  # type: (git.Repo) -> bool
+        name = cls.repo_name(repo)
+        path = pathlib.Path(appdirs.user_data_dir(APP_NAME)) / 'repos' / (name + '.pickle')
+        return path.exists()
+
+    # TODO: Refactor usage of appdirs into separate fnc and use GITRACK_DEV envvar
+    @classmethod
     def init_repo(cls, repo):
         name = cls.repo_name(repo)
         path = pathlib.Path(appdirs.user_data_dir(APP_NAME)) / 'repos'

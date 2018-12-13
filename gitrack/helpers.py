@@ -4,7 +4,7 @@ import typing
 import click
 import inquirer
 
-from . import config, PROVIDERS, LOCAL_CONFIG_NAME
+from . import exceptions, config, PROVIDERS, LOCAL_CONFIG_NAME
 
 
 def _folder_has_git(check_dir):  # type: (pathlib.Path) -> bool
@@ -52,6 +52,9 @@ def install_hook(repo):  # type: (git.Repo) -> None
 
 # TODO: Check if the repo was not already initialized!
 def init(repo, config_store_destination, verbose=True):  # type: (git.Repo, config.ConfigDestination, bool) -> None
+    if config.Store.is_repo_initialized(repo):
+        raise exceptions.InitializedRepoException('Repo has been already initialized!')
+
     if verbose:
         print_welcome(repo.git_dir)
 

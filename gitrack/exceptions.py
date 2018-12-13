@@ -7,6 +7,13 @@ class ConfigException(GitrackException):
     pass
 
 
+class InitializedRepoException(GitrackException):
+    """
+    Raised when user tries to initialized repo that has been already initialized before.
+    """
+    pass
+
+
 class UninitializedRepoException(GitrackException):
     pass
 
