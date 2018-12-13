@@ -263,6 +263,12 @@ class Store:
 
         atexit.register(self.save)
 
+    def __getitem__(self, item):
+        return self.data.get(item)  # TODO: [Q] Is this good idea? Return None instead of KeyError?
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
     def load(self):
         with self._path.open('rb') as file:
             self.data = pickle.load(file)

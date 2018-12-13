@@ -6,6 +6,8 @@ from . import helpers, config
 # TODO: Handling --ammend
 # TODO: Parsing commit message/branch name for Task ID
 # TODO: Offline mode?
+# TODO: Status in shell's prompt
+# TODO: Concurrently running tracking? Per repo? Per account? Per provider?
 
 def entrypoint(args, obj=None):
     """
@@ -28,14 +30,18 @@ def cli(ctx):
 @cli.command(short_help='Starts time tracking')
 @click.pass_context
 def start(ctx):
-    ctx.obj['provider'].start()
+    if not ctx.obj['config'].store['running']:
+        ctx.obj['provider'].start()
+        ctx.obj['config'].store['running'] = True
 
 
 @cli.command(short_help='Stops time tracking')
 @click.option('--description', '-d', help='Description for the running time entry')
 @click.pass_context
 def stop(ctx, description):
-    ctx.obj['provider'].stop(description)
+    if ctx.obj['config'].store['running']:
+        ctx.obj['provider'].stop(description)
+        ctx.obj['config'].store['running'] = False
 
 
 @cli.command(short_help='Initialize Git repo for time tracking')
@@ -59,6 +65,9 @@ def hooks(ctx):
 @hooks.command('post-commit', short_help='Post-commit git hook')
 @click.pass_context
 def hooks_post_commit(ctx):
+    if not ctx.obj['config'].store['running']:
+        return
+
     provider = ctx.obj['provider']
     repo = ctx.obj['repo']
     commit = repo.head.commit
