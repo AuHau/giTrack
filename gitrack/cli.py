@@ -27,6 +27,12 @@ def cli(ctx):
         ctx.obj['provider'] = ctx.obj['config'].provider_class(ctx.obj['config'])
 
 
+@cli.resultcallback()
+def save_store(*args):
+    ctx = click.get_current_context()
+    ctx.obj['config'].store.save()
+
+
 @cli.command(short_help='Starts time tracking')
 @click.pass_context
 def start(ctx):

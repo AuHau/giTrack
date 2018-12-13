@@ -1,4 +1,3 @@
-import atexit
 import configparser
 import pathlib
 import pickle
@@ -260,8 +259,6 @@ class Store:
             raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!'.format(name))
 
         self.data = {}
-
-        atexit.register(self.save)
 
     def __getitem__(self, item):
         return self.data.get(item)  # TODO: [Q] Is this good idea? Return None instead of KeyError?
