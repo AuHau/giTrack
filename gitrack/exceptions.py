@@ -3,6 +3,10 @@ class GitrackException(Exception):
     pass
 
 
+class ConfigException(GitrackException):
+    pass
+
+
 class UninitializedRepoException(GitrackException):
     pass
 

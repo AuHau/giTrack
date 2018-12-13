@@ -39,10 +39,15 @@ def stop(ctx, description):
 
 
 @cli.command(short_help='Initialize Git repo for time tracking')
+@click.option('--config-destination', '-c', type=click.Choice(['local', 'store']),
+              default='local',
+              help='Specifies where to store the configuration for the initialized repository. '
+                   '\'local\' means file in the root of the Git repository. '
+                   '\'store\' means giTrack\'s internal storage. Default: local')
 @click.pass_context
-def init(ctx):
+def init(ctx, config_destination):
     repo = ctx.obj['repo']
-    helpers.init(repo)
+    helpers.init(repo, config.ConfigDestination(config_destination))
 
 
 @cli.group(short_help='Git hooks invocations')

@@ -50,7 +50,8 @@ def install_hook(repo):  # type: (git.Repo) -> None
         post_commit_file.chmod(0o740)
 
 
-def init(repo, verbose=True):  # type: (git.Repo, bool) -> None
+# TODO: Check if the repo was not already initialized!
+def init(repo, config_store_destination, verbose=True):  # type: (git.Repo, config.ConfigDestination, bool) -> None
     if verbose:
         print_welcome(repo.git_dir)
 
@@ -60,11 +61,10 @@ def init(repo, verbose=True):  # type: (git.Repo, bool) -> None
     provider_configuration = provider_class.init()
 
     config.Store.init_repo(repo)
-    gitrack_config = config.Config(repo)
-    gitrack_config.set_providers_config(repo_configuration['provider'], provider_configuration)
 
-    local_config = pathlib.Path(repo.git_dir).parent / LOCAL_CONFIG_NAME
-    gitrack_config.persist(str(local_config), repo_configuration)
+    gitrack_config = config.Config(repo, config_store_destination, **repo_configuration)
+    gitrack_config.set_providers_config(repo_configuration['provider'], provider_configuration)
+    gitrack_config.persist()
 
     install_hook(repo)
 

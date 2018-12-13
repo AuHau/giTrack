@@ -1,40 +1,81 @@
+import atexit
 import configparser
 import pathlib
 import pickle
 import typing
+import abc
 from collections import namedtuple
+from enum import Enum
 
 import git
 import appdirs
 
 from . import exceptions, APP_NAME, LOCAL_CONFIG_NAME, PROVIDERS
 
-
 IniEntry = namedtuple('IniEntry', ['section', 'type'])
 
 
-class IniConfig:
-    """
-    Class mixin for implementing __getattribute__ which have a source of a data in config file that is implemented
-    using ConfigParser.
+class ConfigSource(abc.ABC):
+    @abc.abstractmethod
+    def persist(self):
+        pass
 
-    INI_MAPPING defines mapping of config (ini) file structure (eq. sections -> options) into just attribute's names.
-    It also defines the types of the values for correct type casting.
+    @abc.abstractmethod
+    def get_providers_config(self, provider_name):  # type: (str) -> typing.Dict
+        pass
 
-    Only attributes that have entry in INI_MAPPING will be considered during the lookup, if the attribute does not have
-    entry the look continues with propagating the lookup to next in line, with super().
-    """
+    @abc.abstractmethod
+    def set_providers_config(self, provider_name, items):  # type: (str, typing.Dict) -> None
+        pass
 
-    def __init__(self, stores, primary_store_index, **kwargs):  # type: (typing.Sequence[configparser.ConfigParser], int, **typing.Any) -> None
-        self._stores = stores
-        self._primary_store_index = primary_store_index
-        super().__init__(**kwargs)
+    @abc.abstractmethod
+    def __getattr__(self, item):
+        pass
 
-    @property
-    def _primary_store(self):
-        return self._stores[self._primary_store_index]
+    @abc.abstractmethod
+    def __setattr__(self, key, value):
+        super().__setattr__(key, value)
 
-    def _resolve_type(self, store, entry, item):  # type: (configparser.ConfigParser, IniEntry, str) -> typing.Any
+
+class IniConfigSource(ConfigSource):
+    def __init__(self, path, mapping):  # type: (pathlib.Path, typing.Dict[str, IniEntry]) -> None
+        self._path = path
+        self._mapping = mapping
+        self._store = configparser.ConfigParser(interpolation=None)
+
+        if path.exists():
+            self._store.read((str(path),))
+
+    def __getattr__(self, item):  # type: (str) -> typing.Any
+        try:
+            if item in self._mapping:
+                return self._resolve_type(self._mapping[item], item)
+        except configparser.Error:
+            pass
+
+        raise AttributeError('\'{}\' attribute not found at: {}'.format(item, self._path))
+
+    def __setattr__(self, key, value):
+        # Private fields are stored directly on instance
+        if key[0] == '_':
+            super().__setattr__(key, value)
+            return
+
+        if key not in self._mapping:
+            raise exceptions.ConfigException('You are trying to set \'{}\' attribute '
+                                             'which does not have defined mapping!'.format(key))
+
+        section = self._mapping[key].section
+
+        if not self._store.has_section(section):
+            self._store.add_section(section)
+
+        if value is None:
+            self._store.remove_option(section, key)
+        else:
+            self._store.set(section, key, str(value))
+
+    def _resolve_type(self, entry, item):  # type: (IniEntry, str) -> typing.Any
         """
         Method returns value in config file defined by entry.section and item (eq. option).
         The value is type-casted into proper type defined in the entry.type.
@@ -43,76 +84,67 @@ class IniConfig:
             return None
 
         if entry.type == bool:
-            return store.getboolean(entry.section, item, fallback=None)
+            return self._store.getboolean(entry.section, item)
         elif entry.type == int:
-            return store.getint(entry.section, item, fallback=None)
+            return self._store.getint(entry.section, item)
         elif entry.type == float:
-            return store.getfloat(entry.section, item, fallback=None)
+            return self._store.getfloat(entry.section, item)
         else:
-            return store.get(entry.section, item, fallback=None)
-
-    def __getattribute__(self, item):  # type: (str) -> typing.Any
-        """
-        Attr lookup method which implements the main logic.
-        """
-        mapping_dict = object.__getattribute__(self, 'INI_MAPPING')
-        if item in mapping_dict:
-            for store in self._stores:
-                value = self._resolve_type(store, mapping_dict[item], item)
-                if value is not None:
-                    return value
-
-        return super().__getattribute__(item)
+            return self._store.get(entry.section, item)
 
     def get_providers_config(self, provider_name):  # type: (str) -> typing.Dict
-        config = {}
-
-        # Reversed because local config should override global settings
-        for store in reversed(self._stores):
-            if store.has_section(provider_name):
-                config.update(dict(store.items(provider_name)))
-
-        return config
+        try:
+            return dict(self._store.items(provider_name))
+        except configparser.NoSectionError:
+            return {}
 
     def set_providers_config(self, provider_name, items):  # type: (str, typing.Dict) -> None
-        store = self._primary_store
-        store.read_dict({provider_name: items})
+        self._store.read_dict({provider_name: items})
 
-    def persist(self, path, items=None):  # type: (str, typing.Dict) -> None
-        """
-        Method persists the Config's values which are related to IniConfigMixin (eq. are defined in the INI_MAPPING)
-        into config's file.
-        """
-        if items is None:
+    def persist(self):
+        with self._path.open('w') as config_file:
+            self._store.write(config_file)
+
+
+class StoreConfigSource(ConfigSource):
+
+    def get_providers_config(self, provider_name):
+        try:
+            return getattr(self, provider_name)
+        except AttributeError:
+            return {}
+
+    def set_providers_config(self, provider_name, items):
+        setattr(self, provider_name, items)
+
+    def __init__(self, store):  # type: (Store) -> None
+        self._store = store
+
+    def __setattr__(self, key, value):
+        # Private fields are stored directly on instance
+        if key[0] == '_':
+            super().__setattr__(key, value)
             return
 
-        for item, value in items.items():
-            if item in self.INI_MAPPING:
-                section = self.INI_MAPPING[item].section
+        self._store.data[key] = value
 
-                if not self._primary_store.has_section(section):
-                    self._primary_store.add_section(section)
+    def __getattr__(self, item):
+        try:
+            return self._store.data[item]
+        except KeyError:
+            raise AttributeError('\'{}\' attribute not found at Store!'.format(item))
 
-                if value is None:
-                    self._primary_store.remove_option(section, item)
-                else:
-                    self._primary_store.set(section, item, str(value))
-
-        with open(path, 'w') as config_file:
-            self._primary_store.write(config_file)
+    def persist(self):
+        self._store.save()
 
 
-class Config(IniConfig):
-    """
-    Configuration class which implements hierarchy lookup to enable overloading configurations
-    based on several aspects.
+class ConfigDestination(Enum):
+    GLOBAL_CONFIG = 'global'
+    LOCAL_CONFIG = 'local'
+    STORE = 'store'
 
-    Supported hierarchy in order of priority:
-         1) config instance's dict if value is defined
-         2) repo's config file
-         3) global's config file
-         4) class's dict for default fallback
-    """
+
+class Config:
 
     # Default values
 
@@ -122,16 +154,10 @@ class Config(IniConfig):
         'provider': IniEntry('gitrack', str),
     }
 
-    def __init__(self, repo, **kwargs):  # type: (git.Repo, **typing.Any) -> None
-        stores = (
-            self._load_store(pathlib.Path(repo.git_dir).parent / LOCAL_CONFIG_NAME),
-            self._load_store(pathlib.Path(appdirs.user_config_dir(APP_NAME)) / 'default.config'),
-        )
+    def __init__(self, repo, primary_source=ConfigDestination.LOCAL_CONFIG,
+                 **kwargs):  # type: (git.Repo, ConfigDestination, **typing.Any) -> None
 
-        super().__init__(stores, 0)
-
-        self._store = Store(repo)
-        self._store.load()
+        self._bootstrap_sources(repo, primary_source)
 
         # Validate that only proper attributes are set
         for key, value in kwargs.items():
@@ -141,6 +167,23 @@ class Config(IniConfig):
 
             setattr(self, key, value)
 
+    def _bootstrap_sources(self, repo, primary_source):
+        self._store = Store(repo)
+        self._store.load()
+
+        self._sources = (
+            IniConfigSource(pathlib.Path(repo.git_dir).parent / LOCAL_CONFIG_NAME, self.INI_MAPPING),
+            StoreConfigSource(self._store),
+            IniConfigSource(pathlib.Path(appdirs.user_config_dir(APP_NAME)) / 'default.config', self.INI_MAPPING),
+        )
+
+        if primary_source == ConfigDestination.STORE:
+            self._primary_source = self._sources[0]
+        elif primary_source == ConfigDestination.LOCAL_CONFIG:
+            self._primary_source = self._sources[1]
+        elif primary_source == ConfigDestination.GLOBAL_CONFIG:
+            self._primary_source = self._sources[2]
+
     @property
     def store(self):
         return self._store
@@ -149,28 +192,19 @@ class Config(IniConfig):
     def provider_class(self):
         return PROVIDERS(self.provider).klass()
 
-    @staticmethod
-    def _load_store(path):  # type: (pathlib.Path) -> configparser.ConfigParser
-        store = configparser.ConfigParser(interpolation=None)
+    def get_providers_config(self, provider_name):
+        provider_config = {}
 
-        if path.exists():
-            store.read((str(path),))
+        for source in reversed(self._sources):
+            provider_config.update(source.get_providers_config(provider_name))
 
-        return store
+        return provider_config
 
-    def persist(self, path, items=None):  # type: (str, typing.Dict) -> None
-        """
-        Method that enables persist the config and its parent's parts (eq. IniConfig saves a file).
-        """
-        if items is None:
-            items = {}
-            for item, value in vars(self).items():
-                if item.isupper() or item[0] == '_' or (self._get_class_attribute(item) == value and value is not None):
-                    continue
+    def set_providers_config(self, provider_name, items):
+        self._primary_source.set_providers_config(provider_name, items)
 
-                items[item] = value
-
-        super().persist(path, items)
+    def persist(self):  # type: () -> None
+        self._primary_source.persist()
 
     def __getattribute__(self, item):  # type: (str) -> typing.Any
         """
@@ -192,12 +226,28 @@ class Config(IniConfig):
         if item_exists and self._get_class_attribute(item) != retrieved_value:
             return retrieved_value
 
-        return super().__getattribute__(item)
+        for source in self._sources:
+            try:
+                return getattr(source, item)
+            except AttributeError:
+                pass
+
+        if not item_exists:
+            raise AttributeError
+
+        return retrieved_value
+
+    def __setattr__(self, key, value):
+        super().__setattr__(key, value)
+
+        if self._primary_source is not None:
+            setattr(self._primary_source, key, value)
 
     def _get_class_attribute(self, attr):  # type: (str) -> typing.Any
         return self.__class__.__dict__.get(attr)
 
 
+# TODO: [Q] Should I use CachedFactoryMeta for this? (eq. Singleton with parameter)
 class Store:
 
     def __init__(self, repo):  # type: (git.Repo) -> None
@@ -210,6 +260,8 @@ class Store:
             raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!'.format(name))
 
         self.data = {}
+
+        atexit.register(self.save)
 
     def load(self):
         with self._path.open('rb') as file:
