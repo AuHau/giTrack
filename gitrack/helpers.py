@@ -1,10 +1,21 @@
+import shutil
+
 import git
 import pathlib
 import typing
 import click
 import inquirer
 
-from . import exceptions, config, PROVIDERS, LOCAL_CONFIG_NAME
+from . import exceptions, config, PROVIDERS, GITRACK_POST_COMMIT_EXECUTABLE_FILENAME, SUPPORTED_SHELLS
+
+
+CMD_PATH_PLACEHOLDER = '{{CMD_PATH}}'
+
+SHELLS_COMMANDS = {
+    'bash': '\n./{} &',
+    'zsh': '\n./{} &',
+    'fish': '\n./{} & disown',
+}
 
 
 def _folder_has_git(check_dir):  # type: (pathlib.Path) -> bool
@@ -36,25 +47,62 @@ def is_repo_initialized(repo):  # type: (git.Repo) -> bool
     return config.Store.is_repo_initialized(repo)
 
 
+def is_hook_installed(hooks_dir):  # type:(pathlib.Path) -> bool
+    return (hooks_dir / GITRACK_POST_COMMIT_EXECUTABLE_FILENAME).exists()
+
+
+def _get_shell(post_commit_file):  # type: (pathlib.Path) -> str
+    """
+    Check whether existing post_commit file is a shell script of supported shell if not exception is raised.
+
+    Supported shells: Bash, Fish, Zsh
+
+    :param post_commit_file:
+    :return:
+    """
+    with post_commit_file.open('r') as f:
+        shebang = f.readline().lower()
+
+        for shell in SUPPORTED_SHELLS:
+            if shell in shebang:
+                return shell
+
+        raise exceptions.UnkownShell('It seems that the currently used post-commit '
+                                     'hook uses shebang that is not known to Gitrack: ' + shebang)
+
+
 def install_hook(repo):  # type: (git.Repo) -> None
-    repo_dir = pathlib.Path(repo.git_dir)
-    post_commit_file = repo_dir / 'hooks' / 'post-commit'
-    new_file = not post_commit_file.exists()
-    write_mode = 'w' if new_file else 'a'
+    hooks_dir = pathlib.Path(repo.git_dir) / 'hooks'
 
-    with post_commit_file.open(write_mode) as file:
-        if new_file:
-            file.writelines('#!/usr/bin/env bash')
+    if is_hook_installed(hooks_dir):
+        return
 
-        # TODO: Usage of correct binary based on using virtualenv/pex/dev environment
-        # TODO: Detection of already installed hook
-        file.writelines('\n\ngitrack hooks post-commit &')
+    _create_gitrack_post_commit_executable(hooks_dir)
 
-    if new_file:
+    post_commit_file = hooks_dir / 'post-commit'
+    if post_commit_file.exists():
+        shell = _get_shell(post_commit_file)
+
+        with post_commit_file.open('a') as f:
+            f.writelines(SHELLS_COMMANDS[shell].format(GITRACK_POST_COMMIT_EXECUTABLE_FILENAME))
+    else:
+        post_commit_file.write_text('#!/usr/bin/env bash\n\n./{} &'.format(GITRACK_POST_COMMIT_EXECUTABLE_FILENAME))
         post_commit_file.chmod(0o740)
 
 
-def init(repo, config_store_destination, should_install_hook=True, verbose=True):  # type: (git.Repo, config.ConfigDestination, bool) -> None
+def _create_gitrack_post_commit_executable(hooks_dir):  # type: (pathlib.Path) -> None
+    gitrack_post_commit_executable = hooks_dir / GITRACK_POST_COMMIT_EXECUTABLE_FILENAME
+    gitrack_binary = shutil.which('gitrack')
+
+    with (pathlib.Path(__file__).parent / 'post_commit_executable_template.sh').open('r') as f:
+        template = f.read().replace(CMD_PATH_PLACEHOLDER, gitrack_binary)
+
+    gitrack_post_commit_executable.write_text(template)
+    gitrack_post_commit_executable.chmod(0o740)
+
+
+def init(repo, config_store_destination, should_install_hook=True,
+         verbose=True):  # type: (git.Repo, config.ConfigDestination, bool, bool) -> None
     if config.Store.is_repo_initialized(repo):
         raise exceptions.InitializedRepoException('Repo has been already initialized!')
 

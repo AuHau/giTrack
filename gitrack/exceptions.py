@@ -18,6 +18,10 @@ class UninitializedRepoException(GitrackException):
     pass
 
 
+class UnkownShell(GitrackException):
+    pass
+
+
 class ProviderException(GitrackException):
     def __init__(self, provider_name, message, *args, **kwargs):
         self.message = message
