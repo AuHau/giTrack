@@ -275,10 +275,9 @@ class Store:
             pickle.dump(self.data, file)
 
     @staticmethod
-    def repo_name(repo):
-        # TODO: Proper escaping of the path
-        # TODO: Check for too long strings
-        return repo.git_dir[1:].replace('/', '_').replace('_.git', '')
+    def repo_name(repo):  # type: (git.Repo) -> str
+        name = repo.git_dir[1:].replace('/', '_').replace('\\', '_').replace('_.git', '')
+        return name[-250:]  # Most of file-systems has restriction on length of filename around 250 chars
 
     @classmethod
     def is_repo_initialized(cls, repo):  # type: (git.Repo) -> bool
