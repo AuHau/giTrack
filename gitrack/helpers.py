@@ -32,6 +32,10 @@ def get_repo(current_dir=None):  # type: (typing.Optional[pathlib.Path]) -> git.
     return get_repo(current_dir.parent)
 
 
+def is_repo_initialized(repo):  # type: (git.Repo) -> bool
+    return config.Store.is_repo_initialized(repo)
+
+
 def install_hook(repo):  # type: (git.Repo) -> None
     repo_dir = pathlib.Path(repo.git_dir)
     post_commit_file = repo_dir / 'hooks' / 'post-commit'

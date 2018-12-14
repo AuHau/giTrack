@@ -30,7 +30,9 @@ def cli(ctx):
 @cli.resultcallback()
 def save_store(*args):
     ctx = click.get_current_context()
-    ctx.obj['config'].store.save()
+
+    if ctx.invoked_subcommand != 'init':
+        ctx.obj['config'].store.save()
 
 
 @cli.command(short_help='Starts time tracking')
@@ -51,15 +53,24 @@ def stop(ctx, description):
 
 
 @cli.command(short_help='Initialize Git repo for time tracking')
+@click.option('--check', is_flag=True, help='Instead of initializing the repo, checks whether it has '
+                                            'been initialized before. If not exits the command with status code 2')
 @click.option('--config-destination', '-c', type=click.Choice(['local', 'store']),
               default='local',
               help='Specifies where to store the configuration for the initialized repository. '
                    '\'local\' means file in the root of the Git repository. '
                    '\'store\' means giTrack\'s internal storage. Default: local')
 @click.pass_context
-def init(ctx, config_destination):
+def init(ctx, check, config_destination):
     repo = ctx.obj['repo']
-    helpers.init(repo, config.ConfigDestination(config_destination))
+
+    if check:
+        if helpers.is_repo_initialized(repo):
+            return
+        else:
+            exit(2)
+    else:
+        helpers.init(repo, config.ConfigDestination(config_destination))
 
 
 @cli.group(short_help='Git hooks invocations')
