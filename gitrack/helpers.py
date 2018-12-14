@@ -54,10 +54,15 @@ def install_hook(repo):  # type: (git.Repo) -> None
         post_commit_file.chmod(0o740)
 
 
-# TODO: Check if the repo was not already initialized!
 def init(repo, config_store_destination, verbose=True):  # type: (git.Repo, config.ConfigDestination, bool) -> None
     if config.Store.is_repo_initialized(repo):
         raise exceptions.InitializedRepoException('Repo has been already initialized!')
+
+    # Initializing repo with .gitrack file ==> no need to bootstrap
+    if config.Config.get_local_config_file(repo).exists():
+        config.Store.init_repo(repo)
+        install_hook(repo)
+        return
 
     if verbose:
         print_welcome(repo.git_dir)

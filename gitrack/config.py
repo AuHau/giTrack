@@ -186,9 +186,9 @@ class Config:
         self._store.load()
 
         self._sources = (
-            IniConfigSource(pathlib.Path(repo.git_dir).parent / LOCAL_CONFIG_NAME, self.INI_MAPPING),
+            IniConfigSource(self.get_local_config_file(repo), self.INI_MAPPING),
             StoreConfigSource(self._store),
-            IniConfigSource(get_config_dir() / 'default.config', self.INI_MAPPING),
+            IniConfigSource(self.get_global_config_file(), self.INI_MAPPING),
         )
 
         if primary_source == ConfigDestination.STORE:
@@ -259,6 +259,14 @@ class Config:
 
     def _get_class_attribute(self, attr):  # type: (str) -> typing.Any
         return self.__class__.__dict__.get(attr)
+
+    @classmethod
+    def get_global_config_file(cls):  # type: () -> pathlib.Path
+        return get_config_dir() / 'default.config'
+
+    @classmethod
+    def get_local_config_file(cls, repo):  # type: (git.Repo) -> pathlib.Path
+        return pathlib.Path(repo.git_dir).parent / LOCAL_CONFIG_NAME
 
 
 # TODO: [Q] Should I use CachedFactoryMeta for this? (eq. Singleton with parameter)
