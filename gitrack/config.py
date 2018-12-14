@@ -1,4 +1,5 @@
 import configparser
+import os
 import pathlib
 import pickle
 import typing
@@ -12,6 +13,20 @@ import appdirs
 from . import exceptions, APP_NAME, LOCAL_CONFIG_NAME, PROVIDERS
 
 IniEntry = namedtuple('IniEntry', ['section', 'type'])
+
+
+def get_data_dir():  # type: () -> pathlib.Path
+    if os.environ.get('GITRACK_DEV'):
+        return pathlib.Path(__file__).parent.parent / '.data' / 'data'
+
+    return pathlib.Path(appdirs.user_data_dir(APP_NAME))
+
+
+def get_config_dir():  # type: () -> pathlib.Path
+    if os.environ.get('GITRACK_DEV'):
+        return pathlib.Path(__file__).parent.parent / '.data' / 'config'
+
+    return pathlib.Path(appdirs.user_config_dir(APP_NAME))
 
 
 class ConfigSource(abc.ABC):
@@ -173,7 +188,7 @@ class Config:
         self._sources = (
             IniConfigSource(pathlib.Path(repo.git_dir).parent / LOCAL_CONFIG_NAME, self.INI_MAPPING),
             StoreConfigSource(self._store),
-            IniConfigSource(pathlib.Path(appdirs.user_config_dir(APP_NAME)) / 'default.config', self.INI_MAPPING),
+            IniConfigSource(get_config_dir() / 'default.config', self.INI_MAPPING),
         )
 
         if primary_source == ConfigDestination.STORE:
@@ -251,12 +266,12 @@ class Store:
 
     def __init__(self, repo):  # type: (git.Repo) -> None
         name = self.repo_name(repo)
-        path = pathlib.Path(appdirs.user_data_dir(APP_NAME)) / 'repos'
+        path = get_data_dir() / 'repos'
         path.mkdir(parents=True, exist_ok=True)
         self._path = path / (name + '.pickle')  # type: pathlib.Path
 
         if not self._path.exists():
-            raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!'.format(name))
+            raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!'.format(repo.git_dir))
 
         self.data = {}
 
@@ -282,14 +297,13 @@ class Store:
     @classmethod
     def is_repo_initialized(cls, repo):  # type: (git.Repo) -> bool
         name = cls.repo_name(repo)
-        path = pathlib.Path(appdirs.user_data_dir(APP_NAME)) / 'repos' / (name + '.pickle')
+        path = get_data_dir() / 'repos' / (name + '.pickle')
         return path.exists()
 
-    # TODO: Refactor usage of appdirs into separate fnc and use GITRACK_DEV envvar
     @classmethod
     def init_repo(cls, repo):
         name = cls.repo_name(repo)
-        path = pathlib.Path(appdirs.user_data_dir(APP_NAME)) / 'repos'
+        path = get_data_dir() / 'repos'
         path.mkdir(parents=True, exist_ok=True)
         repo_file = path / (name + '.pickle')  # type: pathlib.Path
 
