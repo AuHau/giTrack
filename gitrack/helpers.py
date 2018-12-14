@@ -54,14 +54,15 @@ def install_hook(repo):  # type: (git.Repo) -> None
         post_commit_file.chmod(0o740)
 
 
-def init(repo, config_store_destination, verbose=True):  # type: (git.Repo, config.ConfigDestination, bool) -> None
+def init(repo, config_store_destination, should_install_hook=True, verbose=True):  # type: (git.Repo, config.ConfigDestination, bool) -> None
     if config.Store.is_repo_initialized(repo):
         raise exceptions.InitializedRepoException('Repo has been already initialized!')
 
     # Initializing repo with .gitrack file ==> no need to bootstrap
     if config.Config.get_local_config_file(repo).exists():
         config.Store.init_repo(repo)
-        install_hook(repo)
+
+        should_install_hook and install_hook(repo)
         return
 
     if verbose:
@@ -78,7 +79,7 @@ def init(repo, config_store_destination, verbose=True):  # type: (git.Repo, conf
     gitrack_config.set_providers_config(repo_configuration['provider'], provider_configuration)
     gitrack_config.persist()
 
-    install_hook(repo)
+    should_install_hook and install_hook(repo)
 
 
 def print_welcome(repo_path):

@@ -55,13 +55,17 @@ def stop(ctx, description):
 @cli.command(short_help='Initialize Git repo for time tracking')
 @click.option('--check', is_flag=True, help='Instead of initializing the repo, checks whether it has '
                                             'been initialized before. If not exits the command with status code 2')
+@click.option('--install-hook', is_flag=True, help='If you want to just install hook without initialization.')
+@click.option('--no-hook', is_flag=True, help='If you want to skip Git\'s hook installation. You will be responsible to'
+                                              ' set properly the hook to call \'gitrack hooks post-commit\'.'
+                                              ' Without that giTrack won\'t function properly.')
 @click.option('--config-destination', '-c', type=click.Choice(['local', 'store']),
               default='local',
               help='Specifies where to store the configuration for the initialized repository. '
                    '\'local\' means file in the root of the Git repository. '
                    '\'store\' means giTrack\'s internal storage. Default: local')
 @click.pass_context
-def init(ctx, check, config_destination):
+def init(ctx, check, install_hook, no_hook, config_destination):
     repo = ctx.obj['repo']
 
     if check:
@@ -70,7 +74,10 @@ def init(ctx, check, config_destination):
         else:
             exit(2)
     else:
-        helpers.init(repo, config.ConfigDestination(config_destination))
+        if install_hook:
+            helpers.install_hook(repo)
+        else:
+            helpers.init(repo, config.ConfigDestination(config_destination), should_install_hook=not no_hook)
 
 
 @cli.group(short_help='Git hooks invocations')
