@@ -7,7 +7,7 @@ GITRACK_POST_COMMIT_EXECUTABLE_FILENAME = 'post-commit.gitrack'
 SUPPORTED_SHELLS = ('bash', 'zsh', 'fish')
 
 
-class PROVIDERS(Enum):
+class Providers(Enum):
 
     TOGGL = 'toggl'
 
@@ -17,3 +17,23 @@ class PROVIDERS(Enum):
             return TogglProvider
 
         raise RuntimeError('Unknown provider!')
+
+    def __str__(self):
+        return self.value
+
+
+class TaskParsingModes(Enum):
+    STATIC = 'static'
+    DYNAMIC_BRANCH = 'dynamic_branch'
+    DYNAMIC_MESSAGE = 'dynamic_message'
+
+    @classmethod
+    def messages(cls):
+        return {
+            cls.STATIC: 'static value',
+            cls.DYNAMIC_BRANCH: 'dynamically parsed from branch name',
+            cls.DYNAMIC_MESSAGE: 'dynamically parsed from commit message',
+        }
+
+    def message(self):
+        return self.messages()[self]

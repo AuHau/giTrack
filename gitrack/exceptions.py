@@ -18,7 +18,7 @@ class UninitializedRepoException(GitrackException):
     pass
 
 
-class UnkownShell(GitrackException):
+class UnknownShell(GitrackException):
     pass
 
 

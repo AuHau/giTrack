@@ -1,6 +1,6 @@
 import click
 
-from . import helpers, config
+from . import helpers, config as config_module
 
 
 # TODO: Handling --ammend
@@ -8,6 +8,8 @@ from . import helpers, config
 # TODO: Offline mode?
 # TODO: Status in shell's prompt
 # TODO: Concurrently running tracking? Per repo? Per account? Per provider?
+# TODO: Automatic pausing using file activities (watchdog)
+# TODO: Exception handling
 
 def entrypoint(args, obj=None):
     """
@@ -23,15 +25,17 @@ def cli(ctx):
     ctx.obj['repo'] = repo
 
     if ctx.invoked_subcommand != 'init':
-        ctx.obj['config'] = config.Config(repo)
-        ctx.obj['provider'] = ctx.obj['config'].provider_class(ctx.obj['config'])
+        ctx.obj['config'] = config_module.Config(repo)
+
+        provider_class = ctx.obj['config'].provider.klass()
+        ctx.obj['provider'] = provider_class(ctx.obj['config'])
 
 
 @cli.resultcallback()
 def save_store(*args):
     ctx = click.get_current_context()
 
-    if ctx.invoked_subcommand != 'init':
+    if ctx.obj.get('config'):
         ctx.obj['config'].store.save()
 
 
@@ -77,7 +81,7 @@ def init(ctx, check, install_hook, no_hook, config_destination):
         if install_hook:
             helpers.install_hook(repo)
         else:
-            helpers.init(repo, config.ConfigDestination(config_destination), should_install_hook=not no_hook)
+            helpers.init(repo, config_module.ConfigDestination(config_destination), should_install_hook=not no_hook)
 
 
 @cli.group(short_help='Git hooks invocations')
@@ -89,7 +93,8 @@ def hooks(ctx):
 @hooks.command('post-commit', short_help='Post-commit git hook')
 @click.pass_context
 def hooks_post_commit(ctx):
-    if not ctx.obj['config'].store['running']:
+    config = ctx.obj['config']
+    if not config.store['running']:
         return
 
     provider = ctx.obj['provider']
@@ -97,5 +102,15 @@ def hooks_post_commit(ctx):
     commit = repo.head.commit
     message = commit.message.strip()
 
-    provider.stop(message)
+    task = project = None
+    if config.tasks_support:
+        task = helpers.get_task(config, repo)
+
+    if config.project_support:
+        try:
+            project = int(config.project)
+        except ValueError:
+            project = config.project
+
+    provider.stop(message, task=task, project=project)
     provider.start()

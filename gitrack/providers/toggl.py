@@ -1,10 +1,12 @@
-from toggl import api, utils
+from toggl import api, utils, exceptions as toggl_exceptions
 
 from . import AbstractProvider
 from .. import config, exceptions
 
 
 class TogglProvider(AbstractProvider):
+    support_projects = True
+    support_tasks = True
 
     NAME = 'toggl'
 
@@ -33,11 +35,53 @@ class TogglProvider(AbstractProvider):
     def start(self):
         api.TimeEntry.start_and_save(created_with='gitrack', config=self.toggl_config)
 
-    def stop(self, description, amend=False):
-        entry = api.TimeEntry.objects.current(config=self.toggl_config)  # type: toggl.api.TimeEntry
+    def stop(self, description, amend=False, task=None, project=None):
+        entry = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
+
+        if entry is None:
+            return
+
         entry.description = description
+
+        if task is not None:
+            if isinstance(task, int):
+                entry.task = task
+            else:
+                try:
+                    entry.task = api.Task.objects.get(name=task, config=self.toggl_config)
+                except (toggl_exceptions.TogglNotFoundException, toggl_exceptions.TogglMultipleResultsException) as e:
+                    raise exceptions.ProviderException(self.NAME, 'There was an error while fetching the task entity: ' + e.message)
+
+        if project is not None:
+            if isinstance(project, int):
+                entry.project = project
+            else:
+                try:
+                    entry.project = api.Project.objects.get(name=project, config=self.toggl_config)
+                except (toggl_exceptions.TogglNotFoundException, toggl_exceptions.TogglMultipleResultsException) as e:
+                    raise exceptions.ProviderException(self.NAME, 'There was an error while fetching the project entity: ' + e.message)
+
         entry.stop_and_save()
 
-    def add(self, start, stop, description):
+    def add(self, start, stop, description, task=None, project=None):
         entry = api.TimeEntry(start, stop, description=description, config=self.toggl_config)
+
+        if task is not None:
+            if isinstance(task, int):
+                entry.task = task
+            else:
+                try:
+                    entry.task = api.Task.objects.get(name=task, config=self.toggl_config)
+                except (toggl_exceptions.TogglNotFoundException, toggl_exceptions.TogglMultipleResultsException) as e:
+                    raise exceptions.ProviderException(self.NAME, 'There was an error while fetching the task entity: ' + e.message)
+
+        if project is not None:
+            if isinstance(project, int):
+                entry.project = project
+            else:
+                try:
+                    entry.project = api.Project.objects.get(name=project, config=self.toggl_config)
+                except (toggl_exceptions.TogglNotFoundException, toggl_exceptions.TogglMultipleResultsException) as e:
+                    raise exceptions.ProviderException(self.NAME, 'There was an error while fetching the project entity: ' + e.message)
+
         entry.save()

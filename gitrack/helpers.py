@@ -1,3 +1,4 @@
+import re
 import shutil
 
 import git
@@ -6,8 +7,7 @@ import typing
 import click
 import inquirer
 
-from . import exceptions, config, PROVIDERS, GITRACK_POST_COMMIT_EXECUTABLE_FILENAME, SUPPORTED_SHELLS
-
+from . import exceptions, config, Providers, GITRACK_POST_COMMIT_EXECUTABLE_FILENAME, SUPPORTED_SHELLS, TaskParsingModes
 
 CMD_PATH_PLACEHOLDER = '{{CMD_PATH}}'
 
@@ -67,7 +67,7 @@ def _get_shell(post_commit_file):  # type: (pathlib.Path) -> str
             if shell in shebang:
                 return shell
 
-        raise exceptions.UnkownShell('It seems that the currently used post-commit '
+        raise exceptions.UnknownShell('It seems that the currently used post-commit '
                                      'hook uses shebang that is not known to Gitrack: ' + shebang)
 
 
@@ -100,6 +100,10 @@ def _create_gitrack_post_commit_executable(hooks_dir):  # type: (pathlib.Path) -
     gitrack_post_commit_executable.write_text(template)
     gitrack_post_commit_executable.chmod(0o740)
 
+#####################################################################################
+# Initialization
+#####################################################################################
+
 
 def init(repo, config_store_destination, should_install_hook=True,
          verbose=True):  # type: (git.Repo, config.ConfigDestination, bool, bool) -> None
@@ -108,6 +112,7 @@ def init(repo, config_store_destination, should_install_hook=True,
 
     # Initializing repo with .gitrack file ==> no need to bootstrap
     if config.Config.get_local_config_file(repo).exists():
+        click.secho('Found local .gitrack file. Skipping bootstrap and using its configuration.', fg='yellow')
         config.Store.init_repo(repo)
 
         should_install_hook and install_hook(repo)
@@ -118,13 +123,15 @@ def init(repo, config_store_destination, should_install_hook=True,
 
     repo_configuration = prompt_configuration()
 
-    provider_class = PROVIDERS(repo_configuration['provider']).klass()
+    click.secho('\nNow provider\'s configuration:', fg='white', dim=1)
+    provider_class = repo_configuration['provider']
     provider_configuration = provider_class.init()
 
     config.Store.init_repo(repo)
 
+    repo_configuration['provider'] = provider_class.NAME
     gitrack_config = config.Config(repo, config_store_destination, **repo_configuration)
-    gitrack_config.set_providers_config(repo_configuration['provider'], provider_configuration)
+    gitrack_config.set_providers_config(provider_class.NAME, provider_configuration)
     gitrack_config.persist()
 
     should_install_hook and install_hook(repo)
@@ -142,9 +149,82 @@ def print_welcome(repo_path):
     click.echo('Welcome to giTrack! \nLet us initialize giTrack for this repo: {}\n'.format(repo_path))
 
 
+def _validate_regex(regex):  # type: (str) -> bool
+    try:
+        re.compile(regex)
+
+        # Regex needs to define named capturing group 'task'
+        return '?P<task>' in regex
+    except re.error:
+        return False
+
+
 def prompt_configuration():  # type: () -> typing.Dict
-    providers = {provider.value.capitalize(): provider.value for provider in PROVIDERS}
+    providers = {provider.value.capitalize(): provider.value for provider in Providers}
     selected_provider = inquirer.shortcuts.list_input('Select provider you want to use for this repo',
                                                       choices=providers.keys())
+    selected_provider = Providers(providers[selected_provider]).klass()
 
-    return {'provider': providers[selected_provider]}
+    questions = []
+
+    if selected_provider.support_projects:
+        questions += [
+            inquirer.Confirm('project_support', default=False, message='Enable Project\'s support?'),
+            inquirer.Text('project', ignore=lambda x: not x['project_support'], message='Specify project\'s name or ID',
+                          validate=lambda _, x: bool(x)),
+        ]
+
+    if selected_provider.support_tasks:
+        questions += [
+            inquirer.Confirm('tasks_support', default=False, message='Enable Task\'s support?'),
+            inquirer.List('tasks_mode', message='How should task\'s ID/Name should be retrieved?',
+                          choices=TaskParsingModes.messages().values(), ignore=lambda x: not x['tasks_support']),
+            inquirer.Text('tasks_value', validate=lambda _, x: bool(x), message='Specify task\'s name or ID',
+                          ignore=lambda x: not x['tasks_support'] or x['tasks_mode'] != TaskParsingModes.STATIC.message()),
+            inquirer.Text('tasks_regex', validate=lambda _, x: bool(x) and _validate_regex(x),
+                          ignore=lambda x: not x['tasks_support'] or x['tasks_mode'] == TaskParsingModes.STATIC.message(),
+                          message='Specify Python\'s Regex that will parse the task\'s name or ID. Regex have to have capturing group with name \'task\''),
+        ]
+
+    answers = inquirer.prompt(questions)
+    if answers is None:
+        click.secho("We were not able to setup the needed configuration and we are unfortunately not able to "
+                    "proceed without it.", bg="white", fg="red")
+        exit(1)
+
+    answers.update({'provider': selected_provider})
+
+    return answers
+
+#####################################################################################
+# Task/Projects
+#####################################################################################
+
+
+def _parse_string(regex, string):
+    match = re.search(regex, string)
+
+    if not match:
+        return None
+
+    return match.group('task')
+
+
+def get_task(config, repo):  # type: (config.Config, git.Repo) -> typing.Union[str, int]
+    if config.tasks_mode == TaskParsingModes.STATIC:
+        return config.tasks_value
+
+    if config.tasks_mode == TaskParsingModes.DYNAMIC_MESSAGE:
+        text_to_parse = repo.head.commit.message.strip()
+    elif config.tasks_mode == TaskParsingModes.DYNAMIC_BRANCH:
+        text_to_parse = repo.active_branch.name
+    else:
+        raise exceptions.GitrackException('Unkown Task\'s mode: ' + config.tasks_mode)
+
+    task = _parse_string(config.tasks_regex, text_to_parse)
+
+    try:
+        return int(task)
+    except ValueError:
+        return task
+

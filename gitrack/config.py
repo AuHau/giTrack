@@ -10,7 +10,7 @@ from enum import Enum
 import git
 import appdirs
 
-from . import exceptions, APP_NAME, LOCAL_CONFIG_NAME, PROVIDERS
+from . import exceptions, APP_NAME, LOCAL_CONFIG_NAME, Providers, TaskParsingModes
 
 IniEntry = namedtuple('IniEntry', ['section', 'type'])
 
@@ -103,8 +103,10 @@ class IniConfigSource(ConfigSource):
             return self._store.getint(entry.section, item)
         elif entry.type == float:
             return self._store.getfloat(entry.section, item)
-        else:
+        elif entry.type == str:
             return self._store.get(entry.section, item)
+        else:
+            return entry.type(self._store.get(entry.section, item))
 
     def get_providers_config(self, provider_name):  # type: (str) -> typing.Dict
         try:
@@ -161,11 +163,20 @@ class ConfigDestination(Enum):
 class Config:
 
     # Default values
-
     provider = None
+    project_support = False
+    tasks_support = False
 
     INI_MAPPING = {
-        'provider': IniEntry('gitrack', str),
+        'provider': IniEntry('gitrack', Providers),
+
+        'project_support': IniEntry('gitrack', bool),
+        'project': IniEntry('gitrack', str),
+
+        'tasks_support': IniEntry('gitrack', bool),
+        'tasks_mode': IniEntry('gitrack', TaskParsingModes),
+        'tasks_regex': IniEntry('gitrack', str),
+        'tasks_value': IniEntry('gitrack', str),
     }
 
     def __init__(self, repo, primary_source=ConfigDestination.LOCAL_CONFIG,
@@ -192,19 +203,15 @@ class Config:
         )
 
         if primary_source == ConfigDestination.STORE:
-            self._primary_source = self._sources[0]
-        elif primary_source == ConfigDestination.LOCAL_CONFIG:
             self._primary_source = self._sources[1]
+        elif primary_source == ConfigDestination.LOCAL_CONFIG:
+            self._primary_source = self._sources[0]
         elif primary_source == ConfigDestination.GLOBAL_CONFIG:
             self._primary_source = self._sources[2]
 
     @property
     def store(self):
         return self._store
-
-    @property
-    def provider_class(self):
-        return PROVIDERS(self.provider).klass()
 
     def get_providers_config(self, provider_name):
         provider_config = {}
