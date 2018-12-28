@@ -26,7 +26,7 @@ def _folder_has_git(check_dir):  # type: (pathlib.Path) -> bool
     return False
 
 
-def get_repo(current_dir=None):  # type: (typing.Optional[pathlib.Path]) -> git.Repo
+def get_repo_dir(current_dir=None):  # type: (typing.Optional[pathlib.Path]) -> pathlib.Path
     if current_dir is None:
         current_dir = pathlib.Path.cwd().resolve()
 
@@ -34,16 +34,16 @@ def get_repo(current_dir=None):  # type: (typing.Optional[pathlib.Path]) -> git.
         current_dir = current_dir.parent
 
     if _folder_has_git(current_dir):
-        return git.Repo(str(current_dir))
+        return current_dir
 
     # When following IF is true we reached the root of dir tree
     if current_dir == current_dir.parent:
         raise RuntimeError('No Git repo in the directory tree.')
 
-    return get_repo(current_dir.parent)
+    return get_repo_dir(current_dir.parent)
 
 
-def is_repo_initialized(repo):  # type: (git.Repo) -> bool
+def is_repo_initialized(repo):  # type: (pathlib.Path) -> bool
     return config.Store.is_repo_initialized(repo)
 
 
@@ -71,8 +71,8 @@ def _get_shell(post_commit_file):  # type: (pathlib.Path) -> str
                                      'hook uses shebang that is not known to Gitrack: ' + shebang)
 
 
-def install_hook(repo):  # type: (git.Repo) -> None
-    hooks_dir = pathlib.Path(repo.git_dir) / 'hooks'
+def install_hook(repo_dir):  # type: (pathlib.Path) -> None
+    hooks_dir = repo_dir / '.git' / 'hooks'
 
     if is_hook_installed(hooks_dir):
         return
@@ -94,7 +94,7 @@ def _create_gitrack_post_commit_executable(hooks_dir):  # type: (pathlib.Path) -
     gitrack_post_commit_executable = hooks_dir / GITRACK_POST_COMMIT_EXECUTABLE_FILENAME
     gitrack_binary = shutil.which('gitrack')
 
-    with (pathlib.Path(__file__).parent / 'post_commit_executable_template.sh').open('r') as f:
+    with (pathlib.Path(__file__).parent / 'scripts' / 'post_commit_executable_template.sh').open('r') as f:
         template = f.read().replace(CMD_PATH_PLACEHOLDER, gitrack_binary)
 
     gitrack_post_commit_executable.write_text(template)
@@ -105,21 +105,21 @@ def _create_gitrack_post_commit_executable(hooks_dir):  # type: (pathlib.Path) -
 #####################################################################################
 
 
-def init(repo, config_store_destination, should_install_hook=True,
-         verbose=True):  # type: (git.Repo, config.ConfigDestination, bool, bool) -> None
-    if config.Store.is_repo_initialized(repo):
+def init(repo_dir, config_store_destination, should_install_hook=True,
+         verbose=True):  # type: (pathlib.Path, config.ConfigDestination, bool, bool) -> None
+    if config.Store.is_repo_initialized(repo_dir):
         raise exceptions.InitializedRepoException('Repo has been already initialized!')
 
     # Initializing repo with .gitrack file ==> no need to bootstrap
-    if config.Config.get_local_config_file(repo).exists():
+    if config.Config.get_local_config_file(repo_dir).exists():
         click.secho('Found local .gitrack file. Skipping bootstrap and using its configuration.', fg='yellow')
-        config.Store.init_repo(repo)
+        config.Store.init_repo(repo_dir)
 
-        should_install_hook and install_hook(repo)
+        should_install_hook and install_hook(repo_dir)
         return
 
     if verbose:
-        print_welcome(repo.git_dir)
+        print_welcome(repo_dir)
 
     repo_configuration = prompt_configuration()
 
@@ -127,14 +127,14 @@ def init(repo, config_store_destination, should_install_hook=True,
     provider_class = repo_configuration['provider']
     provider_configuration = provider_class.init()
 
-    config.Store.init_repo(repo)
+    config.Store.init_repo(repo_dir)
 
     repo_configuration['provider'] = provider_class.NAME
-    gitrack_config = config.Config(repo, config_store_destination, **repo_configuration)
+    gitrack_config = config.Config(repo_dir, config_store_destination, **repo_configuration)
     gitrack_config.set_providers_config(provider_class.NAME, provider_configuration)
     gitrack_config.persist()
 
-    should_install_hook and install_hook(repo)
+    should_install_hook and install_hook(repo_dir)
 
 
 def print_welcome(repo_path):

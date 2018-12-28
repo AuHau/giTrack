@@ -7,7 +7,6 @@ import abc
 from collections import namedtuple
 from enum import Enum
 
-import git
 import appdirs
 
 from . import exceptions, APP_NAME, LOCAL_CONFIG_NAME, Providers, TaskParsingModes
@@ -179,10 +178,10 @@ class Config:
         'tasks_value': IniEntry('gitrack', str),
     }
 
-    def __init__(self, repo, primary_source=ConfigDestination.LOCAL_CONFIG,
-                 **kwargs):  # type: (git.Repo, ConfigDestination, **typing.Any) -> None
+    def __init__(self, repo_dir, primary_source=ConfigDestination.LOCAL_CONFIG,
+                 **kwargs):  # type: (pathlib.Path, ConfigDestination, **typing.Any) -> None
 
-        self._bootstrap_sources(repo, primary_source)
+        self._bootstrap_sources(repo_dir, primary_source)
 
         # Validate that only proper attributes are set
         for key, value in kwargs.items():
@@ -192,12 +191,12 @@ class Config:
 
             setattr(self, key, value)
 
-    def _bootstrap_sources(self, repo, primary_source):
-        self._store = Store(repo)
+    def _bootstrap_sources(self, repo_dir, primary_source):
+        self._store = Store(repo_dir)
         self._store.load()
 
         self._sources = (
-            IniConfigSource(self.get_local_config_file(repo), self.INI_MAPPING),
+            IniConfigSource(self.get_local_config_file(repo_dir), self.INI_MAPPING),
             StoreConfigSource(self._store),
             IniConfigSource(self.get_global_config_file(), self.INI_MAPPING),
         )
@@ -272,21 +271,21 @@ class Config:
         return get_config_dir() / 'default.config'
 
     @classmethod
-    def get_local_config_file(cls, repo):  # type: (git.Repo) -> pathlib.Path
-        return pathlib.Path(repo.git_dir).parent / LOCAL_CONFIG_NAME
+    def get_local_config_file(cls, repo_dir):  # type: (pathlib.Path) -> pathlib.Path
+        return repo_dir / LOCAL_CONFIG_NAME
 
 
 # TODO: [Q] Should I use CachedFactoryMeta for this? (eq. Singleton with parameter)
 class Store:
 
-    def __init__(self, repo):  # type: (git.Repo) -> None
-        name = self.repo_name(repo)
+    def __init__(self, repo_dir):  # type: (pathlib.Path) -> None
+        name = self.repo_name(repo_dir)
         path = get_data_dir() / 'repos'
         path.mkdir(parents=True, exist_ok=True)
         self._path = path / (name + '.pickle')  # type: pathlib.Path
 
         if not self._path.exists():
-            raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!'.format(repo.git_dir))
+            raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!'.format(repo_dir))
 
         self.data = {}
 
@@ -305,19 +304,19 @@ class Store:
             pickle.dump(self.data, file)
 
     @staticmethod
-    def repo_name(repo):  # type: (git.Repo) -> str
-        name = repo.git_dir[1:].replace('/', '_').replace('\\', '_').replace('_.git', '')
+    def repo_name(repo_dir):  # type: (pathlib.Path) -> str
+        name = str(repo_dir)[1:].replace('/', '_').replace('\\', '_')
         return name[-250:]  # Most of file-systems has restriction on length of filename around 250 chars
 
     @classmethod
-    def is_repo_initialized(cls, repo):  # type: (git.Repo) -> bool
-        name = cls.repo_name(repo)
+    def is_repo_initialized(cls, repo_dir):  # type: (pathlib.Path) -> bool
+        name = cls.repo_name(repo_dir)
         path = get_data_dir() / 'repos' / (name + '.pickle')
         return path.exists()
 
     @classmethod
-    def init_repo(cls, repo):
-        name = cls.repo_name(repo)
+    def init_repo(cls, repo_dir):
+        name = cls.repo_name(repo_dir)
         path = get_data_dir() / 'repos'
         path.mkdir(parents=True, exist_ok=True)
         repo_file = path / (name + '.pickle')  # type: pathlib.Path

@@ -1,11 +1,10 @@
 import click
+import git
 
 from . import helpers, config as config_module
 
 
-# TODO: Handling --ammend
-# TODO: Parsing commit message/branch name for Task ID
-# TODO: Offline mode?
+# TODO: [?] Offline mode
 # TODO: Status in shell's prompt
 # TODO: Concurrently running tracking? Per repo? Per account? Per provider?
 # TODO: Automatic pausing using file activities (watchdog)
@@ -21,11 +20,11 @@ def entrypoint(args, obj=None):
 @click.group()
 @click.pass_context
 def cli(ctx):
-    repo = helpers.get_repo()
-    ctx.obj['repo'] = repo
+    repo_dir = helpers.get_repo_dir()
+    ctx.obj['repo_dir'] = repo_dir
 
     if ctx.invoked_subcommand != 'init':
-        ctx.obj['config'] = config_module.Config(repo)
+        ctx.obj['config'] = config_module.Config(repo_dir)
 
         provider_class = ctx.obj['config'].provider.klass()
         ctx.obj['provider'] = provider_class(ctx.obj['config'])
@@ -70,18 +69,18 @@ def stop(ctx, description):
                    '\'store\' means giTrack\'s internal storage. Default: local')
 @click.pass_context
 def init(ctx, check, install_hook, no_hook, config_destination):
-    repo = ctx.obj['repo']
+    repo_dir = ctx.obj['repo_dir']
 
     if check:
-        if helpers.is_repo_initialized(repo):
+        if helpers.is_repo_initialized(repo_dir):
             return
         else:
             exit(2)
     else:
         if install_hook:
-            helpers.install_hook(repo)
+            helpers.install_hook(repo_dir)
         else:
-            helpers.init(repo, config_module.ConfigDestination(config_destination), should_install_hook=not no_hook)
+            helpers.init(repo_dir, config_module.ConfigDestination(config_destination), should_install_hook=not no_hook)
 
 
 @cli.group(short_help='Git hooks invocations')
@@ -98,7 +97,7 @@ def hooks_post_commit(ctx):
         return
 
     provider = ctx.obj['provider']
-    repo = ctx.obj['repo']
+    repo = git.Repo(ctx.obj['repo_dir'])
     commit = repo.head.commit
     message = commit.message.strip()
 
