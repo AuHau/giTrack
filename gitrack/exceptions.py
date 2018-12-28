@@ -22,6 +22,10 @@ class UnknownShell(GitrackException):
     pass
 
 
+class PromptException(GitrackException):
+    pass
+
+
 class ProviderException(GitrackException):
     def __init__(self, provider_name, message, *args, **kwargs):
         self.message = message

@@ -12,9 +12,9 @@ from . import exceptions, config, Providers, GITRACK_POST_COMMIT_EXECUTABLE_FILE
 CMD_PATH_PLACEHOLDER = '{{CMD_PATH}}'
 
 SHELLS_COMMANDS = {
-    'bash': '\n./{} &',
-    'zsh': '\n./{} &',
-    'fish': '\n./{} & disown',
+    'bash': '\n{} &',
+    'zsh': '\n{} &',
+    'fish': '\n{} & disown',
 }
 
 
@@ -68,7 +68,7 @@ def _get_shell(post_commit_file):  # type: (pathlib.Path) -> str
                 return shell
 
         raise exceptions.UnknownShell('It seems that the currently used post-commit '
-                                     'hook uses shebang that is not known to Gitrack: ' + shebang)
+                                      'hook uses shebang that is not known to Gitrack: ' + shebang)
 
 
 def install_hook(repo_dir):  # type: (pathlib.Path) -> None
@@ -78,15 +78,16 @@ def install_hook(repo_dir):  # type: (pathlib.Path) -> None
         return
 
     _create_gitrack_post_commit_executable(hooks_dir)
+    path_to_post_commit_executable = str(hooks_dir / GITRACK_POST_COMMIT_EXECUTABLE_FILENAME)
 
     post_commit_file = hooks_dir / 'post-commit'
     if post_commit_file.exists():
         shell = _get_shell(post_commit_file)
 
         with post_commit_file.open('a') as f:
-            f.writelines(SHELLS_COMMANDS[shell].format(GITRACK_POST_COMMIT_EXECUTABLE_FILENAME))
+            f.writelines(SHELLS_COMMANDS[shell].format(path_to_post_commit_executable))
     else:
-        post_commit_file.write_text('#!/usr/bin/env bash\n\n./{} &'.format(GITRACK_POST_COMMIT_EXECUTABLE_FILENAME))
+        post_commit_file.write_text('#!/usr/bin/env bash\n\n{} &'.format(path_to_post_commit_executable))
         post_commit_file.chmod(0o740)
 
 

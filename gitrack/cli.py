@@ -1,7 +1,9 @@
+from datetime import datetime
+
 import click
 import git
 
-from . import helpers, config as config_module
+from . import helpers, prompt, config as config_module
 
 
 # TODO: [?] Offline mode
@@ -9,6 +11,31 @@ from . import helpers, config as config_module
 # TODO: Concurrently running tracking? Per repo? Per account? Per provider?
 # TODO: Automatic pausing using file activities (watchdog)
 # TODO: Exception handling
+# TODO: Verbose & Debugs modes ==> silence warnings from Toggl
+
+
+#################################################################
+# Custom classes for Click
+
+
+class Mutex(click.Option):
+    def __init__(self, *args, **kwargs):
+        self.not_required_if = kwargs.pop("not_required_if")
+
+        assert self.not_required_if, "'not_required_if' parameter required"
+        kwargs["help"] = (kwargs.get("help", "") + "Option is mutually exclusive with " + ", ".join(self.not_required_if) + ".").strip()
+        super().__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        current_opt = self.name in opts
+        for mutex_opt in self.not_required_if:
+            if mutex_opt in opts:
+                if current_opt:
+                    raise click.UsageError("Illegal usage: '" + str(self.name) + "' is mutually exclusive with " + str(mutex_opt) + ".")
+                else:
+                    self.prompt = None
+        return super().handle_parse_result(ctx, opts, args)
+
 
 def entrypoint(args, obj=None):
     """
@@ -44,6 +71,7 @@ def start(ctx):
     if not ctx.obj['config'].store['running']:
         ctx.obj['provider'].start()
         ctx.obj['config'].store['running'] = True
+        ctx.obj['config'].store['since'] = datetime.now()
 
 
 @cli.command(short_help='Stops time tracking')
@@ -53,6 +81,7 @@ def stop(ctx, description):
     if ctx.obj['config'].store['running']:
         ctx.obj['provider'].stop(description)
         ctx.obj['config'].store['running'] = False
+        ctx.obj['config'].store['since'] = None
 
 
 @cli.command(short_help='Initialize Git repo for time tracking')
@@ -113,3 +142,32 @@ def hooks_post_commit(ctx):
 
     provider.stop(message, task=task, project=project)
     provider.start()
+    ctx.obj['config'].store['since'] = datetime.now()
+
+
+@cli.command('prompt', short_help='Handles integration to shell\'s prompt')
+@click.option('--activate', cls=Mutex, not_required_if=('deactivate',), is_flag=True, help='Command will only activate the giTrack\'s prompt, no toggling.')
+@click.option('--deactivate', cls=Mutex, not_required_if=('activate',), is_flag=True, help='Command will only deactivate the giTrack\'s prompt, no toggling.')
+@click.option('--style', '-s', type=click.Choice(['simple', 'clock']),
+              default='simple', help='Defines look of the installed prompt')
+@click.pass_context
+def prompt_cmd(ctx, activate, deactivate, style):
+    """
+    Command which activates/deactivates shell's prompt integration.
+
+    \b
+    This command needs to be ran as:
+     - for Bash/ZSH: eval $(gitrack prompt)
+     - for Fish: gitrack prompt | source -
+
+    You can customize the command with additional options.
+    """
+    if activate:
+        prompt.is_activated() and prompt.deactivate()
+    elif deactivate:
+        not prompt.is_activated() and prompt.activate(style)
+    else:
+        if prompt.is_activated():
+            prompt.deactivate()
+        else:
+            prompt.activate(style)

@@ -193,7 +193,6 @@ class Config:
 
     def _bootstrap_sources(self, repo_dir, primary_source):
         self._store = Store(repo_dir)
-        self._store.load()
 
         self._sources = (
             IniConfigSource(self.get_local_config_file(repo_dir), self.INI_MAPPING),
@@ -288,6 +287,7 @@ class Store:
             raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!'.format(repo_dir))
 
         self.data = {}
+        self.load()
 
     def __getitem__(self, item):
         return self.data.get(item)  # TODO: [Q] Is this good idea? Return None instead of KeyError?
@@ -323,3 +323,6 @@ class Store:
 
         with repo_file.open('wb') as file:
             pickle.dump({}, file)
+
+    def __str__(self):
+        return 'Store({})'.format(self._path)
