@@ -9,7 +9,7 @@ from enum import Enum
 
 import appdirs
 
-from . import exceptions, APP_NAME, LOCAL_CONFIG_NAME, Providers, TaskParsingModes
+from gitrack import exceptions, APP_NAME, LOCAL_CONFIG_NAME, Providers, TaskParsingModes
 
 IniEntry = namedtuple('IniEntry', ['section', 'type'])
 

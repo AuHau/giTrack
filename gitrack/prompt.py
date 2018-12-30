@@ -5,7 +5,7 @@ import psutil
 
 import click
 
-from . import exceptions, SUPPORTED_SHELLS
+from gitrack import exceptions, SUPPORTED_SHELLS
 
 
 def _get_shell():

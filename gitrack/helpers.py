@@ -7,7 +7,7 @@ import typing
 import click
 import inquirer
 
-from . import exceptions, config, Providers, GITRACK_POST_COMMIT_EXECUTABLE_FILENAME, SUPPORTED_SHELLS, TaskParsingModes
+from gitrack import exceptions, config, Providers, GITRACK_POST_COMMIT_EXECUTABLE_FILENAME, SUPPORTED_SHELLS, TaskParsingModes
 
 CMD_PATH_PLACEHOLDER = '{{CMD_PATH}}'
 

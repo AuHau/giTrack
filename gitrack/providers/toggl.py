@@ -1,7 +1,7 @@
 from toggl import api, utils, exceptions as toggl_exceptions
 
-from . import AbstractProvider
-from .. import config, exceptions
+from gitrack.providers import AbstractProvider
+from gitrack import config as config_module, exceptions
 
 
 class TogglProvider(AbstractProvider):
@@ -10,11 +10,11 @@ class TogglProvider(AbstractProvider):
 
     NAME = 'toggl'
 
-    def __init__(self, gitrack_config):
-        self.gitrack_config = gitrack_config
-        self.toggl_config = self._bootstrap_toggl_config(gitrack_config)
+    def __init__(self, config):
+        super().__init__(config)
+        self.toggl_config = self._bootstrap_toggl_config(self.config)
 
-    def _bootstrap_toggl_config(self, gitrack_config):  # type: (config.Config) -> utils.Config
+    def _bootstrap_toggl_config(self, gitrack_config):  # type: (config_module.Config) -> utils.Config
         provider_config = gitrack_config.get_providers_config(self.NAME)
         toggl_config = utils.Config.factory(None)  # type: utils.Config
 
@@ -33,9 +33,11 @@ class TogglProvider(AbstractProvider):
         return {'api_token': api_token}
 
     def start(self):
+        super().start()
         api.TimeEntry.start_and_save(created_with='gitrack', config=self.toggl_config)
 
     def stop(self, description, amend=False, task=None, project=None):
+        super().stop(description, amend, task, project)
         entry = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
 
         if entry is None:

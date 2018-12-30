@@ -3,7 +3,7 @@ from datetime import datetime
 import click
 import git
 
-from . import helpers, prompt, config as config_module
+from gitrack import helpers, prompt, config as config_module
 
 
 # TODO: [?] Offline mode
@@ -70,8 +70,6 @@ def save_store(*args):
 def start(ctx):
     if not ctx.obj['config'].store['running']:
         ctx.obj['provider'].start()
-        ctx.obj['config'].store['running'] = True
-        ctx.obj['config'].store['since'] = datetime.now()
 
 
 @cli.command(short_help='Stops time tracking')
@@ -80,8 +78,6 @@ def start(ctx):
 def stop(ctx, description):
     if ctx.obj['config'].store['running']:
         ctx.obj['provider'].stop(description)
-        ctx.obj['config'].store['running'] = False
-        ctx.obj['config'].store['since'] = None
 
 
 @cli.command(short_help='Initialize Git repo for time tracking')

@@ -1,6 +1,6 @@
 import sys
 
-from . import cli
+from gitrack import cli
 
 
 def main(args=None):
