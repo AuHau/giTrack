@@ -1,11 +1,10 @@
 import os
 import pathlib
-import shutil
 import psutil
 
 import click
 
-from gitrack import exceptions, SUPPORTED_SHELLS
+from gitrack import exceptions, SUPPORTED_SHELLS, config
 
 
 def _get_shell():
@@ -21,11 +20,11 @@ def _get_shell():
 
 
 def is_activated():
-    return os.environ.get('GITRACK_CMD') is not None
+    return os.environ.get('GITRACK_DATA') is not None
 
 
 def activate(mode):
-    gitrack_binary = shutil.which('gitrack-status')
+    data_dir = str(config.get_data_dir() / 'repos')
     shell = _get_shell()
 
     # ZSH and Bash are same for us
@@ -33,7 +32,7 @@ def activate(mode):
         shell = 'bash'
 
     activation_file = pathlib.Path(__file__).parent / 'scripts' / ('prompt_activate.{}.{}'.format(mode, shell)) # type: pathlib.Path
-    click.echo(activation_file.read_text().replace('{{CMD_PATH}}', gitrack_binary))
+    click.echo(activation_file.read_text().replace('{{DATA_PATH}}', data_dir))
 
 
 def deactivate():

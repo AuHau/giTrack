@@ -43,8 +43,8 @@ def get_repo_dir(current_dir=None):  # type: (typing.Optional[pathlib.Path]) -> 
     return get_repo_dir(current_dir.parent)
 
 
-def is_repo_initialized(repo):  # type: (pathlib.Path) -> bool
-    return config.Store.is_repo_initialized(repo)
+def is_repo_initialized(repo_dir):  # type: (pathlib.Path) -> bool
+    return config.is_repo_initialized(repo_dir)
 
 
 def is_hook_installed(hooks_dir):  # type:(pathlib.Path) -> bool
@@ -108,7 +108,7 @@ def _create_gitrack_post_commit_executable(hooks_dir):  # type: (pathlib.Path) -
 
 def init(repo_dir, config_store_destination, should_install_hook=True,
          verbose=True):  # type: (pathlib.Path, config.ConfigDestination, bool, bool) -> None
-    if config.Store.is_repo_initialized(repo_dir):
+    if config.is_repo_initialized(repo_dir):
         raise exceptions.InitializedRepoException('Repo has been already initialized!')
 
     # Initializing repo with .gitrack file ==> no need to bootstrap

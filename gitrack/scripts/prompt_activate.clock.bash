@@ -1,8 +1,43 @@
+function gitrack_status() {
+    local slashes=${PWD//[^\/]/}
+    local directory="$PWD"
+    local repo=""
+    for (( n=${#slashes}; n>0; --n ))
+    do
+      if [ -e "$directory/.git" ]
+      then
+        repo="$directory"
+        break
+      fi
+
+      directory="$directory/.."
+    done
+
+    [[ ! ${repo} ]] && return 2 # No Git repo in the current folder's tree
+
+    local repo_name=$(sed "s/\//_/g" <<<"$repo" | cut -b 2-)
+    [[ ! -d "${GITRACK_DATA}/${repo_name}" ]] && return 2 # Unknown repo
+
+    local gitrack_data="${GITRACK_DATA}/${repo_name}/status"
+    [[ ! -e "${gitrack_data}" ]] && return 1 # Repo is known and initialized, but nothing is running
+
+    start_time=$(cat ${gitrack_data})
+    [[ ! ${start_time} ]] && return 1 # The status file is present but no time inside it
+
+    elapsedseconds=$(expr $(date +%s) - ${start_time})
+
+    if [[ $elapsedseconds -lt 3600 ]]; then
+        echo $elapsedseconds | awk '{printf "%02d:%02d\n",int($1/60), int($1%60)}'
+    else
+        echo $elapsedseconds | awk '{printf "%d:%02d:%02d\n",int($1/3600), int(($1-int(($1/3600))*3600)/60), int(($1-int(($1/3600))*3600)%60)}'
+    fi
+
+    return 0
+}
 
 function gitrack_prompt() {
-
-    current_time="$(env ${GITRACK_CMD})"
-    gitrack_exit_status="$?"
+    current_time=$(gitrack_status)
+    gitrack_exit_status=$?
 
     if [[ ${gitrack_exit_status} -eq 2 ]];
     then
@@ -12,15 +47,16 @@ function gitrack_prompt() {
         then
             export PS1="\e[0;32m${current_time}\e[m ${_OLD_GITRACK_PS1}"
         else
-            export PS1="\e[0;31m${current_time}\e[m ${_OLD_GITRACK_PS1}"
+            export PS1="\e[0;31m00:00\e[m ${_OLD_GITRACK_PS1}"
         fi
     fi
 
 }
 
-export GITRACK_CMD="{{CMD_PATH}}"
+export GITRACK_DATA="{{DATA_PATH}}"
 export _OLD_GITRACK_PS1="$PS1"
 export -f gitrack_prompt
+export -f gitrack_status
 
 # TODO: [Feature/Low] Validation that PROMPT_COMMAND does not exists & handling existing one
 export PROMPT_COMMAND=gitrack_prompt

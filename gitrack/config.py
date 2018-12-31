@@ -28,6 +28,17 @@ def get_config_dir():  # type: () -> pathlib.Path
     return pathlib.Path(appdirs.user_config_dir(APP_NAME))
 
 
+def repo_name(repo_dir):  # type: (pathlib.Path) -> str
+    name = str(repo_dir)[1:].replace('/', '_').replace('\\', '_')
+    return name[-250:]  # Most of file-systems has restriction on length of filename around 250 chars
+
+
+def is_repo_initialized(repo_dir):  # type: (pathlib.Path) -> bool
+    name = repo_name(repo_dir)
+    path = get_data_dir() / 'repos' / name
+    return path.exists()
+
+
 class ConfigSource(abc.ABC):
     @abc.abstractmethod
     def persist(self):
@@ -180,7 +191,8 @@ class Config:
 
     def __init__(self, repo_dir, primary_source=ConfigDestination.LOCAL_CONFIG,
                  **kwargs):  # type: (pathlib.Path, ConfigDestination, **typing.Any) -> None
-
+        self._repo_dir = repo_dir
+        self._repo_name = repo_name(repo_dir)
         self._bootstrap_sources(repo_dir, primary_source)
 
         # Validate that only proper attributes are set
@@ -192,7 +204,7 @@ class Config:
             setattr(self, key, value)
 
     def _bootstrap_sources(self, repo_dir, primary_source):
-        self._store = Store(repo_dir)
+        self._store = Store(self.repo_data_dir / 'data.pickle')
 
         self._sources = (
             IniConfigSource(self.get_local_config_file(repo_dir), self.INI_MAPPING),
@@ -210,6 +222,10 @@ class Config:
     @property
     def store(self):
         return self._store
+
+    @property
+    def repo_data_dir(self):
+        return get_data_dir() / 'repos' / self._repo_name
 
     def get_providers_config(self, provider_name):
         provider_config = {}
@@ -277,14 +293,10 @@ class Config:
 # TODO: [Q] Should I use CachedFactoryMeta for this? (eq. Singleton with parameter)
 class Store:
 
-    def __init__(self, repo_dir):  # type: (pathlib.Path) -> None
-        name = self.repo_name(repo_dir)
-        path = get_data_dir() / 'repos'
-        path.mkdir(parents=True, exist_ok=True)
-        self._path = path / (name + '.pickle')  # type: pathlib.Path
-
+    def __init__(self, path):  # type: (pathlib.Path) -> None
+        self._path = path
         if not self._path.exists():
-            raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!'.format(repo_dir))
+            raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!')
 
         self.data = {}
         self.load()
@@ -303,23 +315,12 @@ class Store:
         with self._path.open('wb') as file:
             pickle.dump(self.data, file)
 
-    @staticmethod
-    def repo_name(repo_dir):  # type: (pathlib.Path) -> str
-        name = str(repo_dir)[1:].replace('/', '_').replace('\\', '_')
-        return name[-250:]  # Most of file-systems has restriction on length of filename around 250 chars
-
-    @classmethod
-    def is_repo_initialized(cls, repo_dir):  # type: (pathlib.Path) -> bool
-        name = cls.repo_name(repo_dir)
-        path = get_data_dir() / 'repos' / (name + '.pickle')
-        return path.exists()
-
     @classmethod
     def init_repo(cls, repo_dir):
-        name = cls.repo_name(repo_dir)
-        path = get_data_dir() / 'repos'
+        name = repo_name(repo_dir)
+        path = get_data_dir() / 'repos' / name
         path.mkdir(parents=True, exist_ok=True)
-        repo_file = path / (name + '.pickle')  # type: pathlib.Path
+        repo_file = path / 'data.pickle'  # type: pathlib.Path
 
         with repo_file.open('wb') as file:
             pickle.dump({}, file)
