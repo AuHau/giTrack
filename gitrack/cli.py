@@ -159,11 +159,8 @@ def prompt_cmd(ctx, activate, deactivate, style):
     You can customize the command with additional options.
     """
     if activate:
-        prompt.is_activated() and prompt.deactivate()
+        prompt.activate(style)
     elif deactivate:
-        not prompt.is_activated() and prompt.activate(style)
+        prompt.deactivate()
     else:
-        if prompt.is_activated():
-            prompt.deactivate()
-        else:
-            prompt.activate(style)
+        prompt.execute(style)

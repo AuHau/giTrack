@@ -1,4 +1,4 @@
-set -x GITRACK_DATA '{{DATA_PATH}}'
+set GITRACK_DATA '{{DATA_PATH}}'
 
 functions -c fish_prompt _old_gitracks_fish_prompt
 
@@ -23,6 +23,9 @@ function gitrack_status
 
     set gitrack_data "$GITRACK_DATA/$repo_name/status"
     [ ! -e $gitrack_data ]; and return 1
+
+    set start_time (cat $gitrack_data)
+    [ ! $start_time ]; and return 1 # The status file is present but no time inside it
 
     return 0
 end

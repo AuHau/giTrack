@@ -1,4 +1,4 @@
-set -x GITRACK_DATA '{{DATA_PATH}}'
+set GITRACK_DATA '{{DATA_PATH}}'
 
 functions -c fish_prompt _old_gitracks_fish_prompt
 

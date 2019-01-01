@@ -1,6 +1,6 @@
 
-export PS1="$_OLD_GITRACK_PS1"
+    PS1="$_OLD_GITRACK_PS1"
 
-unset _OLD_GITRACK_PS1
-unset PROMPT_COMMAND
-unset GITRACK_DATA
+    unset _OLD_GITRACK_PS1
+    unset PROMPT_COMMAND
+    unset GITRACK_DATA
