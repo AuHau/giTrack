@@ -1,16 +1,19 @@
+import logging
+import os
+import traceback
 from datetime import datetime
 
 import click
 import git
 
-from gitrack import helpers, prompt, config as config_module, __version__
+from gitrack import helpers, prompt, config as config_module, __version__, exceptions
+
+logger = logging.getLogger('gitrack.cli')
 
 # Ideas for future
 # TODO: [?] Offline mode
 # TODO: Concurrently running tracking? Per repo? Per account? Per provider?
 # TODO: Automatic pausing using file activities (watchdog)
-# TODO: Exception handling
-# TODO: Verbose & Debugs modes ==> silence warnings from Toggl
 
 
 #################################################################
@@ -40,20 +43,50 @@ def entrypoint(args, obj=None):
     """
     CLI entry point, where exceptions are handled.
     """
-    cli(args, obj=obj or {})
+    try:
+        cli(args, obj=obj or {})
+    except exceptions.GitrackException as e:
+        logger.error(str(e).strip())
+        logger.debug(traceback.format_exc())
+        exit(1)
+    except Exception as e:
+        if os.environ.get('GITRACK_EXCEPTIONS') == '1':
+            raise
+
+        logger.error(str(e).strip())
+        logger.debug(traceback.format_exc())
+        exit(1)
 
 
 @click.group()
 @click.option('--quiet', '-q', is_flag=True, help="Don't print anything")
+@click.option('--verbose', '-v', count=True, help="Prints additional info. More Vs, more info! (-vvv...)")
 @click.version_option(__version__)
 @click.pass_context
-def cli(ctx, quiet):
+def cli(ctx, quiet, verbose):
     repo_dir = helpers.get_repo_dir()
     ctx.obj['repo_dir'] = repo_dir
 
+    main_logger = logging.getLogger('gitrack')
+    main_logger.setLevel(logging.DEBUG)
+
+    # Logging to Stderr
+    default = logging.StreamHandler()
+    default_formatter = logging.Formatter('%(levelname)s: %(message)s')
+    default.setFormatter(default_formatter)
+
+    if verbose == 1:
+        default.setLevel(logging.INFO)
+    elif verbose == 2:
+        default.setLevel(logging.DEBUG)
+    else:
+        default.setLevel(logging.ERROR)
+
     if quiet:
-        # TODO: [Q] Is this good idea?
+        # TODO: [Q/Design] Is this good idea?
         click.echo = lambda *args, **kwargs: None
+    else:
+        main_logger.addHandler(default)
 
     if ctx.invoked_subcommand != 'init':
         ctx.obj['config'] = config_module.Config(repo_dir)
