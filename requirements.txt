@@ -4,4 +4,5 @@ appdirs==1.4.*
 togglCli==2.0.0.0b2
 inquirer==2.*
 psutil==5.4.*
+click-completion
 pbr
