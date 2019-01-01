@@ -1,7 +1,11 @@
+import logging
+
 from toggl import api, utils, exceptions as toggl_exceptions
 
 from gitrack.providers import AbstractProvider
 from gitrack import config as config_module, exceptions
+
+logger = logging.getLogger('gitrack.provider.toggl')
 
 
 class TogglProvider(AbstractProvider):
@@ -32,11 +36,18 @@ class TogglProvider(AbstractProvider):
 
         return {'api_token': api_token}
 
-    def start(self):
+    def start(self, force=False):
+        current = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
+
+        if current:
+            logger.info("Currently running entry: " + current.description)
+            if not force:
+                raise exceptions.ProviderException(self.NAME, 'There is currently running another time entry which would be overridden!')
+
         super().start()
         api.TimeEntry.start_and_save(created_with='gitrack', config=self.toggl_config)
 
-    def stop(self, description, amend=False, task=None, project=None):
+    def stop(self, description, amend=False, task=None, project=None, force=False):
         super().stop(description, amend, task, project)
         entry = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
 

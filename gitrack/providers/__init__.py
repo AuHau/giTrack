@@ -24,7 +24,7 @@ class AbstractProvider(abc.ABC):
         return self.config.repo_data_dir / 'status'
 
     @abc.abstractmethod
-    def start(self):  # type: () -> None
+    def start(self, force=False):  # type: (bool) -> None
         self.config.store['running'] = True
         self.config.store['since'] = datetime.datetime.now()
 
@@ -32,7 +32,7 @@ class AbstractProvider(abc.ABC):
 
     @abc.abstractmethod
     def stop(self, description, amend=False, task=None,
-             project=None):  # type: (str, bool, typing.Union[str, int], typing.Union[str, int]) -> None
+             project=None, force=False):  # type: (str, bool, typing.Union[str, int], typing.Union[str, int], bool) -> None
         self.config.store['running'] = False
         self.config.store['since'] = None
 

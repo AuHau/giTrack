@@ -15,7 +15,6 @@ logger = logging.getLogger('gitrack.cli')
 
 # Ideas for future
 # TODO: [?] Offline mode
-# TODO: Concurrently running tracking? Per repo? Per account? Per provider?
 # TODO: Automatic pausing using file activities (watchdog)
 
 
@@ -107,10 +106,11 @@ def save_store(*args, **kwargs):
 
 
 @cli.command(short_help='Starts time tracking')
+@click.option('--force', is_flag=True, help='Will force creation of the time entry.')
 @click.pass_context
-def start(ctx):
+def start(ctx, force):
     if not ctx.obj['config'].store['running']:
-        ctx.obj['provider'].start()
+        ctx.obj['provider'].start(force)
 
 
 @cli.command(short_help='Stops time tracking')
@@ -156,8 +156,9 @@ def hooks(ctx):
 
 
 @hooks.command('post-commit', short_help='Post-commit git hook')
+@click.option('--force', is_flag=True, help='Will force creation of the time entry.')
 @click.pass_context
-def hooks_post_commit(ctx):
+def hooks_post_commit(ctx, force):
     config = ctx.obj['config']
     if not config.store['running']:
         return
@@ -177,7 +178,7 @@ def hooks_post_commit(ctx):
         except ValueError:
             project = config.project
 
-    provider.stop(message, task=task, project=project)
+    provider.stop(message, task=task, project=project, force=force)
     provider.start()
     ctx.obj['config'].store['since'] = datetime.now()
 
