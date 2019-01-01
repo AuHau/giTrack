@@ -1,5 +1,8 @@
 from enum import Enum
+from pbr.version import VersionInfo
 
+VERSION = VersionInfo('gitrack').semantic_version()
+__version__ = VERSION.release_string()
 
 APP_NAME = 'gitrack'
 LOCAL_CONFIG_NAME = '.gitrack'

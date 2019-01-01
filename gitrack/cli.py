@@ -3,11 +3,10 @@ from datetime import datetime
 import click
 import git
 
-from gitrack import helpers, prompt, config as config_module
+from gitrack import helpers, prompt, config as config_module, __version__
 
-
+# Ideas for future
 # TODO: [?] Offline mode
-# TODO: Status in shell's prompt
 # TODO: Concurrently running tracking? Per repo? Per account? Per provider?
 # TODO: Automatic pausing using file activities (watchdog)
 # TODO: Exception handling
@@ -45,10 +44,16 @@ def entrypoint(args, obj=None):
 
 
 @click.group()
+@click.option('--quiet', '-q', is_flag=True, help="Don't print anything")
+@click.version_option(__version__)
 @click.pass_context
-def cli(ctx):
+def cli(ctx, quiet):
     repo_dir = helpers.get_repo_dir()
     ctx.obj['repo_dir'] = repo_dir
+
+    if quiet:
+        # TODO: [Q] Is this good idea?
+        click.echo = lambda *args, **kwargs: None
 
     if ctx.invoked_subcommand != 'init':
         ctx.obj['config'] = config_module.Config(repo_dir)
@@ -58,7 +63,7 @@ def cli(ctx):
 
 
 @cli.resultcallback()
-def save_store(*args):
+def save_store(*args, **kwargs):
     ctx = click.get_current_context()
 
     if ctx.obj.get('config'):
