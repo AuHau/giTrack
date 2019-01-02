@@ -1,5 +1,7 @@
+import ast
 import logging
 
+import inquirer
 from toggl import api, utils, exceptions as toggl_exceptions
 
 from gitrack.providers import AbstractProvider
@@ -16,25 +18,38 @@ class TogglProvider(AbstractProvider):
 
     def __init__(self, config):
         super().__init__(config)
-        self.toggl_config = self._bootstrap_toggl_config(self.config)
+        self.provider_config = self._bootstrap_provider_config()
+        self.toggl_config = self._bootstrap_toggl_config()
 
-    def _bootstrap_toggl_config(self, gitrack_config):  # type: (config_module.Config) -> utils.Config
-        provider_config = gitrack_config.get_providers_config(self.NAME)
+    def _bootstrap_provider_config(self):
+        provider_config = self.config.get_providers_config(self.NAME)
+
+        if 'tags' in provider_config:
+            provider_config['tags'] = ast.literal_eval(provider_config['tags'])
+
+        return provider_config
+
+    def _bootstrap_toggl_config(self):  # type: () -> utils.Config
         toggl_config = utils.Config.factory(None)  # type: utils.Config
 
-        if 'api_token' not in provider_config:
+        if 'api_token' not in self.provider_config:
             raise exceptions.ProviderException(self.NAME, 'Configuration does not contain authentication credentials!')
 
-        toggl_config.api_token = provider_config['api_token']
+        toggl_config.api_token = self.provider_config['api_token']
 
         return toggl_config
 
     @classmethod
     def init(cls):
         bootstrap = utils.bootstrap.ConfigBootstrap()
-        api_token = bootstrap._get_api_token()
+        api_token = bootstrap.get_api_token()
+        tags = inquirer.shortcuts.text('Should the giTrack\'s entries be tagged? (tags delimited by \',\')')
+        tags = tags.split(',')
 
-        return {'api_token': api_token}
+        return {
+            'api_token': api_token,
+            'tags': tags,
+        }
 
     def start(self, force=False):
         current = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
@@ -45,7 +60,7 @@ class TogglProvider(AbstractProvider):
                 raise exceptions.ProviderException(self.NAME, 'There is currently running another time entry which would be overridden!')
 
         super().start()
-        api.TimeEntry.start_and_save(created_with='gitrack', config=self.toggl_config)
+        api.TimeEntry.start_and_save(created_with='gitrack', config=self.toggl_config, tags=self.provider_config.get('tags'))
 
     def stop(self, description, amend=False, task=None, project=None, force=False):
         super().stop(description, amend, task, project)
