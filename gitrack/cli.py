@@ -23,6 +23,11 @@ logger = logging.getLogger('gitrack.cli')
 
 
 class Mutex(click.Option):
+    """
+    Class that implements exclusive options for Click
+
+    Credits to: https://stackoverflow.com/questions/44247099/click-command-line-interfaces-make-options-required-if-other-optional-option-is
+    """
     def __init__(self, *args, **kwargs):
         self.not_required_if = kwargs.pop("not_required_if")
 
@@ -66,6 +71,19 @@ def entrypoint(args, obj=None):
 @click.version_option(__version__)
 @click.pass_context
 def cli(ctx, quiet, verbose):
+    """
+    Tool for automating time tracking using Git. It heavily depends on Git hooks.
+
+    Time entries are created based on the commits, their messages and time of creation.
+    giTrack has to be initialized for each repo before any tracking can happen.
+
+    Configuration is handled on three levels: store > local config > global config.
+    Store is an internal giTrack's data storage, where data are written during initialization.
+    Local config is an .gitrack file placed in root of the Git repository and hence bound to the repository.
+    Global config is a file placed in system's location for application configs. For Linux: ~/.config/gitrack/default.config.
+    For MacOS: ~/Library/Application Support/gitrack/default.config. It is config where the common setting for all
+    repositories.
+    """
     repo_dir = helpers.get_repo_dir()
     ctx.obj['repo_dir'] = repo_dir
 
@@ -109,6 +127,9 @@ def save_store(*args, **kwargs):
 @click.option('--force', is_flag=True, help='Will force creation of the time entry.')
 @click.pass_context
 def start(ctx, force):
+    """
+    Starts the time tracking.
+    """
     if not ctx.obj['config'].store['running']:
         ctx.obj['provider'].start(force)
 
@@ -117,6 +138,9 @@ def start(ctx, force):
 @click.option('--description', '-d', help='Description for the running time entry')
 @click.pass_context
 def stop(ctx, description):
+    """
+    Stops the time tracking with message if provided.
+    """
     if ctx.obj['config'].store['running']:
         ctx.obj['provider'].stop(description)
 
@@ -135,6 +159,17 @@ def stop(ctx, description):
                    '\'store\' means giTrack\'s internal storage. Default: local')
 @click.pass_context
 def init(ctx, check, install_hook, no_hook, config_destination):
+    """
+    Initializes the current Git repository.
+
+    \b
+    There are two places where the bootstrapped information can be stored:
+      - internal storage (store)
+      - local config (local) - file in root of the repository
+
+    It is possible to initialize giTrack without automatic installation of the Git's hook. Then it is your responsibility
+    to ensure that on 'post-commit' hook the giTrack command 'gitrack hooks post-commit' is called.
+    """
     repo_dir = ctx.obj['repo_dir']
 
     if check:
@@ -152,6 +187,9 @@ def init(ctx, check, install_hook, no_hook, config_destination):
 @cli.group(short_help='Git hooks invocations')
 @click.pass_context
 def hooks(ctx):
+    """
+    Internal group of commands for handling Git's hooks
+    """
     pass
 
 
@@ -159,6 +197,11 @@ def hooks(ctx):
 @click.option('--force', is_flag=True, help='Will force creation of the time entry.')
 @click.pass_context
 def hooks_post_commit(ctx, force):
+    """
+    Internal command which is being called on Git's post-commit hook.
+    It is responsible for creating the new time entries.
+    """
+
     config = ctx.obj['config']
     if not config.store['running']:
         return
@@ -220,7 +263,7 @@ Default type: auto
     click_completion.core.shells.keys())))
 
 
-@cli.group(help=cmd_help, short_help='shell completion for toggl')
+@cli.group(help=cmd_help, short_help='Shell completion for gitrack command')
 def completion():
     pass
 

@@ -40,6 +40,10 @@ def is_repo_initialized(repo_dir):  # type: (pathlib.Path) -> bool
 
 
 class ConfigSource(abc.ABC):
+    """
+    Interface definition of Config's source.
+    """
+
     @abc.abstractmethod
     def persist(self):
         pass
@@ -62,6 +66,13 @@ class ConfigSource(abc.ABC):
 
 
 class IniConfigSource(ConfigSource):
+    """
+    Config source implementation that store the data in .ini file.
+
+    As .ini files have sections (eq. 2 levels) and the config instance's attributes don't (eq. 1 level).
+    This config source depends on mapping which maps the attribute's name to proper .ini's section.
+    """
+
     def __init__(self, path, mapping):  # type: (pathlib.Path, typing.Dict[str, IniEntry]) -> None
         self._path = path
         self._mapping = mapping
@@ -133,16 +144,9 @@ class IniConfigSource(ConfigSource):
 
 
 class StoreConfigSource(ConfigSource):
-
-    def get_providers_config(self, provider_name):
-        try:
-            return getattr(self, provider_name)
-        except AttributeError:
-            return {}
-
-    def set_providers_config(self, provider_name, items):
-        setattr(self, provider_name, items)
-
+    """
+    Config source implementation that stores the data into provided giTrack's store.
+    """
     def __init__(self, store):  # type: (Store) -> None
         self._store = store
 
@@ -163,6 +167,15 @@ class StoreConfigSource(ConfigSource):
     def persist(self):
         self._store.save()
 
+    def get_providers_config(self, provider_name):
+        try:
+            return getattr(self, provider_name)
+        except AttributeError:
+            return {}
+
+    def set_providers_config(self, provider_name, items):
+        setattr(self, provider_name, items)
+
 
 class ConfigDestination(Enum):
     GLOBAL_CONFIG = 'global'
@@ -171,6 +184,19 @@ class ConfigDestination(Enum):
 
 
 class Config:
+    """
+    Main Config class, that handles hierarchical data sources.
+
+    There are three sources:
+     - Local config (eq. .gitrack file placed in root of the Git repo)
+     - Store (see bellow)
+     - Global config (eq. config file common for all Git repos)
+
+    The lookup of attributes is done in order showed above.
+
+    Regarding saving the configuration, there is set one source as primary and upon calling 'persist()' method
+    changes are stored only into this source.
+    """
 
     # Default values
     provider = None
@@ -292,6 +318,12 @@ class Config:
 
 # TODO: [Q] Should I use CachedFactoryMeta for this? (eq. Singleton with parameter)
 class Store:
+    """
+    Internal data storage.
+
+    It utilize pickle serialization. Serialized file is stored in passed path. The path is by convention bound
+    to Git's repo path. (Eq. moving Git repo will brake things)
+    """
 
     def __init__(self, path):  # type: (pathlib.Path) -> None
         self._path = path

@@ -1,9 +1,15 @@
 
 class GitrackException(Exception):
+    """
+    General giTrack's exception
+    """
     pass
 
 
 class ConfigException(GitrackException):
+    """
+    Exception related to Config functionality.
+    """
     pass
 
 
@@ -15,6 +21,9 @@ class InitializedRepoException(GitrackException):
 
 
 class UninitializedRepoException(GitrackException):
+    """
+    Raised when giTrack invoke in Git repository that has not been initialized.
+    """
     pass
 
 

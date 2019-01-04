@@ -51,7 +51,13 @@ def _get_shell():
     raise exceptions.UnknownShell('Shell \'{}\' is not supported!'.format(parent_name))
 
 
-def activate(mode):
+def activate(style):
+    """
+    Prints shell script to STDOUT that enhance the shell's prompt with giTrack's status indicators.
+
+    :param style: Defines the style of the prompt
+    :return:
+    """
     data_dir = str(config.get_data_dir() / 'repos')
     shell = _get_shell()
 
@@ -60,12 +66,17 @@ def activate(mode):
         shell = 'bash'
 
     activation_file = pathlib.Path(__file__).parent / 'scripts' / (
-        'prompt_activate.{}.{}'.format(mode, shell))  # type: pathlib.Path
+        'prompt_activate.{}.{}'.format(style, shell))  # type: pathlib.Path
     script = activation_file.read_text().replace('{{DATA_PATH}}', data_dir)
     click.echo(_SHELLS_SCELETONS[shell]['activate'].format(script))
 
 
 def deactivate():
+    """
+    Prints shell script to STDOUT that removes the prompt's enhancements.
+
+    :return:
+    """
     shell = _get_shell()
 
     # ZSH and Bash are same for us
@@ -77,7 +88,13 @@ def deactivate():
     click.echo(_SHELLS_SCELETONS[shell]['deactivate'].format(deactivation_file.read_text()))
 
 
-def execute(mode):
+def execute(style):
+    """
+    Prints shell script to STDOUT that toggl the prompt's enhancements.
+
+    :param style: 
+    :return: 
+    """
     data_dir = str(config.get_data_dir() / 'repos')
     shell = _get_shell()
 
@@ -86,7 +103,7 @@ def execute(mode):
         shell = 'bash'
 
     activation_file = pathlib.Path(__file__).parent / 'scripts' / (
-        'prompt_activate.{}.{}'.format(mode, shell))  # type: pathlib.Path
+        'prompt_activate.{}.{}'.format(style, shell))  # type: pathlib.Path
     deactivation_file = pathlib.Path(__file__).parent / 'scripts' / (
         'prompt_deactivate.{}'.format(shell))  # type: pathlib.Path
 

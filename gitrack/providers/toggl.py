@@ -4,8 +4,8 @@ import logging
 import inquirer
 from toggl import api, utils, exceptions as toggl_exceptions
 
+from gitrack import exceptions
 from gitrack.providers import AbstractProvider
-from gitrack import config as config_module, exceptions
 
 logger = logging.getLogger('gitrack.provider.toggl')
 

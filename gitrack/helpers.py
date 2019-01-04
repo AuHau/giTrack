@@ -19,6 +19,12 @@ SHELLS_COMMANDS = {
 
 
 def _folder_has_git(check_dir):  # type: (pathlib.Path) -> bool
+    """
+    Check if directory contains Git metadata folder
+
+    :param check_dir: Directory to check
+    :return: True if .git folder is present
+    """
     for child in check_dir.iterdir():
         if child.is_dir() and child.name == '.git':
             return True
@@ -27,6 +33,14 @@ def _folder_has_git(check_dir):  # type: (pathlib.Path) -> bool
 
 
 def get_repo_dir(current_dir=None):  # type: (typing.Optional[pathlib.Path]) -> pathlib.Path
+    """
+    Recursively travers the folder tree in search for root of Git repo. (eq. folder that contains .git folder)
+    Does not detects git submodules.
+
+    :param current_dir: Starting point of the traversal, if None that current working directory is used.
+    :return:
+    :raises RuntimeError: If no .git folder is found.
+    """
     if current_dir is None:
         current_dir = pathlib.Path.cwd().resolve()
 
@@ -44,23 +58,39 @@ def get_repo_dir(current_dir=None):  # type: (typing.Optional[pathlib.Path]) -> 
 
 
 def is_repo_initialized(repo_dir):  # type: (pathlib.Path) -> bool
+    """
+    Detects if repo defined by repo_dir has been already initialized for giTrack usage.
+
+    :param repo_dir:
+    :return:
+    """
     return config.is_repo_initialized(repo_dir)
 
 
 def is_hook_installed(hooks_dir):  # type:(pathlib.Path) -> bool
+    """
+    Detects if Git hook was installed in the hook's folder. This detects only hook installed directly by
+    giTrack. If the user opted-out for automatic installation and performed manual integration, then this function
+    won't detect that.
+
+    :param hooks_dir: .git/hooks/ folder
+    :return:
+    """
     return (hooks_dir / GITRACK_POST_COMMIT_EXECUTABLE_FILENAME).exists()
 
 
-def _get_shell(post_commit_file):  # type: (pathlib.Path) -> str
+def _get_scripts_shell(script_file):  # type: (pathlib.Path) -> str
     """
-    Check whether existing post_commit file is a shell script of supported shell if not exception is raised.
+    Returns the shell used in the passed script file. If no shell is recognized exception is raised.
+    Depended on presence of shebang.
 
     Supported shells: Bash, Fish, Zsh
 
-    :param post_commit_file:
+    :param script_file:
     :return:
+    :raises exceptions.UnknownShell: If no shell is recognized
     """
-    with post_commit_file.open('r') as f:
+    with script_file.open('r') as f:
         shebang = f.readline().lower()
 
         for shell in SUPPORTED_SHELLS:
@@ -72,6 +102,17 @@ def _get_shell(post_commit_file):  # type: (pathlib.Path) -> str
 
 
 def install_hook(repo_dir):  # type: (pathlib.Path) -> None
+    """
+    Will automatically install Git's hook post-commit for detecting new commits.
+
+    Function detects if post-commit script is already present and if so, it tries to only add the relevant piece
+    for giTrack's need.
+
+    It uses absolute paths, so if the repo is moved it will stop work.
+
+    :param repo_dir:
+    :return:
+    """
     hooks_dir = repo_dir / '.git' / 'hooks'
 
     if is_hook_installed(hooks_dir):
@@ -82,7 +123,7 @@ def install_hook(repo_dir):  # type: (pathlib.Path) -> None
 
     post_commit_file = hooks_dir / 'post-commit'
     if post_commit_file.exists():
-        shell = _get_shell(post_commit_file)
+        shell = _get_scripts_shell(post_commit_file)
 
         with post_commit_file.open('a') as f:
             f.writelines(SHELLS_COMMANDS[shell].format(path_to_post_commit_executable))
@@ -108,6 +149,16 @@ def _create_gitrack_post_commit_executable(hooks_dir):  # type: (pathlib.Path) -
 
 def init(repo_dir, config_store_destination, should_install_hook=True,
          verbose=True):  # type: (pathlib.Path, config.ConfigDestination, bool, bool) -> None
+    """
+    Initialize Git repo defined by repo_dir for usage with giTrack.
+
+    :param repo_dir:
+    :param config_store_destination: Define to which Config's Source will be the bootstrapped configuration stored.
+    :param should_install_hook: Define if the automatic installation should happen or not
+    :param verbose: How much should the bootstrap be verbose?
+    :return:
+    """
+
     if config.is_repo_initialized(repo_dir):
         raise exceptions.InitializedRepoException('Repo has been already initialized!')
 
@@ -161,6 +212,12 @@ def _validate_regex(regex):  # type: (str) -> bool
 
 
 def prompt_configuration():  # type: () -> typing.Dict
+    """
+    Runs the interactive configuration bootstrap.
+
+    This function runs only the generic giTrack's configuration, not the provider's part.
+    :return:
+    """
     providers = {provider.value.capitalize(): provider.value for provider in Providers}
     selected_provider = inquirer.shortcuts.list_input('Select provider you want to use for this repo',
                                                       choices=providers.keys())
@@ -212,6 +269,18 @@ def _parse_string(regex, string):
 
 
 def get_task(config, repo):  # type: (config.Config, git.Repo) -> typing.Union[str, int]
+    """
+    For given repository parse task identificator.
+
+    Three modes are supported: static, dynamic message and dynamic branch.
+    Static mode will always return value that was defined by user during configuration bootstrap.
+    Dynamic message will parse the last commit's message.
+    Dynamic branch will parse the current branch name.
+
+    :param config:
+    :param repo:
+    :return:
+    """
     if config.tasks_mode == TaskParsingModes.STATIC:
         return config.tasks_value
 
