@@ -328,7 +328,7 @@ class Store:
     def __init__(self, path):  # type: (pathlib.Path) -> None
         self._path = path
         if not self._path.exists():
-            raise exceptions.UninitializedRepoException('Repo \'{}\' has not been initialized!')
+            raise exceptions.UninitializedRepoException('Repo has not been initialized!')
 
         self.data = {}
         self.load()
