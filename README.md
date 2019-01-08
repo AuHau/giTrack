@@ -2,6 +2,7 @@
 
 [![giTrack demonstration](./docs/assets/demonstration-short.gif)](https://asciinema.org/a/220104)
 
+![Platform](https://img.shields.io/badge/platform-macos%20%7C%20linux-lightgrey.svg)
 [![PyPI version](https://badge.fury.io/py/gitrack.svg)](https://badge.fury.io/py/gitrack) 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/gitrack.svg)](https://pypi.org/project/gitrack)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/gitrack.svg)](https://pypi.org/project/gitrack/) 
