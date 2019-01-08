@@ -4,6 +4,7 @@ from pbr.version import VersionInfo
 VERSION = VersionInfo('gitrack').semantic_version()
 __version__ = VERSION.release_string()
 
+GITHUB_REPO_NAME = 'auhau/gitrack'
 APP_NAME = 'gitrack'
 LOCAL_CONFIG_NAME = '.gitrack'
 GITRACK_POST_COMMIT_EXECUTABLE_FILENAME = 'post-commit.gitrack'

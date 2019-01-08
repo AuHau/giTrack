@@ -6,3 +6,4 @@ inquirer==2.*
 psutil==5.4.*
 click-completion
 pbr
+requests

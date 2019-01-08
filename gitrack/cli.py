@@ -123,6 +123,10 @@ def save_store(*args, **kwargs):
     if ctx.obj.get('config'):
         ctx.obj['config'].store.save()
 
+    # We don't want to populate output of shell's script with version warning.
+    if ctx.invoked_subcommand != 'prompt':
+        helpers.check_version()
+
 
 @cli.command(short_help='Starts time tracking')
 @click.option('--force', is_flag=True, help='Will force creation of the time entry.')

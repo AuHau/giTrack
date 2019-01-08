@@ -6,8 +6,9 @@ import pathlib
 import typing
 import click
 import inquirer
+import requests
 
-from gitrack import exceptions, config, Providers, GITRACK_POST_COMMIT_EXECUTABLE_FILENAME, SUPPORTED_SHELLS, TaskParsingModes
+from gitrack import exceptions, config, Providers, GITRACK_POST_COMMIT_EXECUTABLE_FILENAME, SUPPORTED_SHELLS, TaskParsingModes, __version__, GITHUB_REPO_NAME
 
 CMD_PATH_PLACEHOLDER = '{{CMD_PATH}}'
 
@@ -297,4 +298,26 @@ def get_task(config, repo):  # type: (config.Config, git.Repo) -> typing.Union[s
         return int(task)
     except ValueError:
         return task
+
+#####################################################################################
+# Version detection
+#####################################################################################
+
+
+def get_latest_version(repo):
+    r = requests.get("https://api.github.com/repos/{}/releases/latest".format(repo))
+    return r.json().get('tag_name')
+
+
+def check_version():
+    latest_version = get_latest_version(GITHUB_REPO_NAME)
+
+    if latest_version is None:
+        return
+
+    if latest_version != __version__:
+        click.secho("There is newer version of gitrack available! "
+                    "You are running {}, but there is {}!".format(__version__, latest_version), fg='yellow')
+
+
 
