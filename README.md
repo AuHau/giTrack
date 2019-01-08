@@ -1,5 +1,7 @@
 # giTrack
 
+[![giTrack demonstration](./docs/assets/demonstration-short.gif)](https://asciinema.org/a/220104)
+
 [![PyPI version](https://badge.fury.io/py/gitrack.svg)](https://badge.fury.io/py/gitrack) 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/gitrack.svg)](https://pypi.org/project/gitrack)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/gitrack.svg)](https://pypi.org/project/gitrack/) 
@@ -7,10 +9,10 @@
 
 > Zero-touch time tracking using Git
 
-## About
+## Background
 
 giTrack is an utility that aims to make developer's life simpler by taking out the frequent management's requirement of
-reporting the spent time. It does so using Git's commit messages and times for creating time entries, which to my
+reporting the time spent. It does so using Git's commit messages and times for creating time entries, which to my
 experience correlates quiet a lot. It won't produce 100% accurate reports, but it should be "good enough" to meet the
 requirement (and it will at least motivate the developer to write proper commit's messages).
 
@@ -20,7 +22,7 @@ giTracks has notion of providers which are the backends where the time entries a
 
  * [Toggl](https://toggl.com)
  
-Feel free to open an issue with your request for new providers! Anything that has an API should be possible to plug-in.
+Feel free to open an issue with a request for new providers! Anything that has an API should be possible to plug-in.
 
 ## Install
 
