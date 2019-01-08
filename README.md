@@ -33,6 +33,14 @@ Easiest way to install this package is through PyPi:
 $ pip install gitrack
 ```
 
+It is also possible to use [pex](https://github.com/pantsbuild/pex) build which leaves out the hassle around `pip` (virtualenvs etc.).
+You can download the build from [latest release](https://github.com/auhau/gitrack/release/latest) either manually or using
+small installer script:
+
+```shell
+$ curl https://raw.githubusercontent.com/AuHau/gitrack/master/bin/install.sh | bash
+```
+
 ## Usage
 
 For full overview of Toggl CLI capabilities please see [full documentation](https://gitrack.adam-uhlir.me).
