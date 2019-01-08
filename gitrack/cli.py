@@ -73,9 +73,7 @@ def entrypoint(args, obj=None):
 def cli(ctx, quiet, verbose):
     """
     Tool for automating time tracking using Git. It heavily depends on Git hooks.
-
     Time entries are created based on the commits, their messages and time of creation.
-    giTrack has to be initialized for each repo before any tracking can happen.
 
     Configuration is handled on three levels: store > local config > global config.
     Store is an internal giTrack's data storage, where data are written during initialization.
@@ -83,6 +81,9 @@ def cli(ctx, quiet, verbose):
     Global config is a file placed in system's location for application configs. For Linux: ~/.config/gitrack/default.config.
     For MacOS: ~/Library/Application Support/gitrack/default.config. It is config where the common setting for all
     repositories.
+
+    Before using giTrack you have to initialize the Git's repository: 'gitrack init'.
+    Afterwards when you start tracking your work use: 'gitrack start', after your are finished run 'gitrack stop'.
     """
     repo_dir = helpers.get_repo_dir()
     ctx.obj['repo_dir'] = repo_dir
