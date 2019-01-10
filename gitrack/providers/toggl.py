@@ -55,12 +55,14 @@ class TogglProvider(AbstractProvider):
         current = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
 
         if current:
-            logger.info("Currently running entry: " + current.description)
+            logger.info("Currently running entry: " + getattr(current, 'description', ''))
             if not force:
-                raise exceptions.ProviderException(self.NAME, 'There is currently running another time entry which would be overridden!')
+                raise exceptions.ProviderException(self.NAME, 'There is currently running another '
+                                                              'time entry which would be overridden!')
 
         super().start()
-        api.TimeEntry.start_and_save(created_with='gitrack', config=self.toggl_config, tags=self.provider_config.get('tags'))
+        api.TimeEntry.start_and_save(created_with='gitrack', config=self.toggl_config,
+                                     tags=self.provider_config.get('tags'))
 
     def stop(self, description, task=None, project=None, force=False):
         super().stop(description, task, project, force)
@@ -78,7 +80,8 @@ class TogglProvider(AbstractProvider):
                 try:
                     entry.task = api.Task.objects.get(name=task, config=self.toggl_config)
                 except (toggl_exceptions.TogglNotFoundException, toggl_exceptions.TogglMultipleResultsException) as e:
-                    raise exceptions.ProviderException(self.NAME, 'There was an error while fetching the task entity: ' + e.message)
+                    raise exceptions.ProviderException(self.NAME, 'There was an error while fetching the task entity: '
+                                                       + e.message)
 
         if project is not None:
             if isinstance(project, int):
