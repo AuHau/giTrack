@@ -5,7 +5,13 @@ copyright: 'Copyright &copy; 2019 <a href="https://www.adam-uhlir.me">Adam Uhlí
 
 repo_name: 'auhau/gitrack'
 repo_url: 'https://github.com/auhau/gitrack'
-theme: material
+theme:
+  name: 'material'
+  palette:
+    primary: 'orange'
+    accent: 'orange'
+  logo:
+    icon: 'power_settings_new'
 
 markdown_extensions:
   - admonition
@@ -18,5 +24,9 @@ google_analytics:
   - UA-69422360-4
   - auto
 
-
-
+nav:
+  - About: 'index.md'
+  - Installation: 'installation.md'
+  - Configuration: 'configuration.md'
+  - Usage: 'usage.md'
+  - Providers: 'providers.md'

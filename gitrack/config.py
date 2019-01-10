@@ -15,15 +15,15 @@ IniEntry = namedtuple('IniEntry', ['section', 'type'])
 
 
 def get_data_dir():  # type: () -> pathlib.Path
-    if os.environ.get('GITRACK_DEV'):
-        return pathlib.Path(__file__).parent.parent / '.data' / 'data'
+    if 'GITRACK_STORAGE' in os.environ:
+        return pathlib.Path(os.environ.get('GITRACK_STORAGE')) / 'data'
 
     return pathlib.Path(appdirs.user_data_dir(APP_NAME))
 
 
 def get_config_dir():  # type: () -> pathlib.Path
-    if os.environ.get('GITRACK_DEV'):
-        return pathlib.Path(__file__).parent.parent / '.data' / 'config'
+    if 'GITRACK_STORAGE' in os.environ:
+        return pathlib.Path(os.environ.get('GITRACK_STORAGE')) / 'config'
 
     return pathlib.Path(appdirs.user_config_dir(APP_NAME))
 

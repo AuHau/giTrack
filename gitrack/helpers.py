@@ -212,6 +212,8 @@ def _validate_regex(regex):  # type: (str) -> bool
         return False
 
 
+# TODO: [Feature/Medium] When local config is present it should either prepopulate the answers or ask only questions
+#  that are not incorporated in the local config
 def prompt_configuration():  # type: () -> typing.Dict
     """
     Runs the interactive configuration bootstrap.

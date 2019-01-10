@@ -62,8 +62,8 @@ class TogglProvider(AbstractProvider):
         super().start()
         api.TimeEntry.start_and_save(created_with='gitrack', config=self.toggl_config, tags=self.provider_config.get('tags'))
 
-    def stop(self, description, amend=False, task=None, project=None, force=False):
-        super().stop(description, amend, task, project)
+    def stop(self, description, task=None, project=None, force=False):
+        super().stop(description, task, project, force)
         entry = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
 
         if entry is None:
@@ -90,26 +90,3 @@ class TogglProvider(AbstractProvider):
                     raise exceptions.ProviderException(self.NAME, 'There was an error while fetching the project entity: ' + e.message)
 
         entry.stop_and_save()
-
-    def add(self, start, stop, description, task=None, project=None):
-        entry = api.TimeEntry(start, stop, description=description, config=self.toggl_config)
-
-        if task is not None:
-            if isinstance(task, int):
-                entry.task = task
-            else:
-                try:
-                    entry.task = api.Task.objects.get(name=task, config=self.toggl_config)
-                except (toggl_exceptions.TogglNotFoundException, toggl_exceptions.TogglMultipleResultsException) as e:
-                    raise exceptions.ProviderException(self.NAME, 'There was an error while fetching the task entity: ' + e.message)
-
-        if project is not None:
-            if isinstance(project, int):
-                entry.project = project
-            else:
-                try:
-                    entry.project = api.Project.objects.get(name=project, config=self.toggl_config)
-                except (toggl_exceptions.TogglNotFoundException, toggl_exceptions.TogglMultipleResultsException) as e:
-                    raise exceptions.ProviderException(self.NAME, 'There was an error while fetching the project entity: ' + e.message)
-
-        entry.save()
