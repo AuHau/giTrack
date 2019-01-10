@@ -1,6 +1,6 @@
 gitpython==2.1.11
 click==7.0
-appdirs==1.4.*
+appdirs==1.4.3
 togglCli==2.0.0.0b3
 inquirer==2.*
 psutil==5.4.*
