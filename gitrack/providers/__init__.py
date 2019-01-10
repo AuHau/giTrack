@@ -77,3 +77,17 @@ class AbstractProvider(abc.ABC):
 
         self._status_file.write_text('')
 
+    @abc.abstractmethod
+    def cancel(self):
+        """
+        Method should cancel the currently running time entry.
+
+        For correct giTrack's functionality, it have to call super().cancel(...)!
+
+        :return:
+        """
+        self.config.store['running'] = False
+        self.config.store['since'] = None
+
+        self._status_file.write_text('')
+

@@ -90,3 +90,13 @@ class TogglProvider(AbstractProvider):
                     raise exceptions.ProviderException(self.NAME, 'There was an error while fetching the project entity: ' + e.message)
 
         entry.stop_and_save()
+
+    def cancel(self):
+        super().cancel()
+
+        entry = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
+
+        if entry is None:
+            return
+
+        entry.delete(config=self.toggl_config)

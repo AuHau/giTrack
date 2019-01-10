@@ -32,7 +32,8 @@ class Mutex(click.Option):
         self.not_required_if = kwargs.pop("not_required_if")
 
         assert self.not_required_if, "'not_required_if' parameter required"
-        kwargs["help"] = (kwargs.get("help", "") + "Option is mutually exclusive with " + ", ".join(self.not_required_if) + ".").strip()
+        kwargs["help"] = (kwargs.get("help", "") + "Option is mutually exclusive with "
+                          + ", ".join(self.not_required_if) + ".").strip()
         super().__init__(*args, **kwargs)
 
     def handle_parse_result(self, ctx, opts, args):
@@ -40,7 +41,8 @@ class Mutex(click.Option):
         for mutex_opt in self.not_required_if:
             if mutex_opt in opts:
                 if current_opt:
-                    raise click.UsageError("Illegal usage: '" + str(self.name) + "' is mutually exclusive with " + str(mutex_opt) + ".")
+                    raise click.UsageError("Illegal usage: '" + str(self.name) +
+                                           "' is mutually exclusive with " + str(mutex_opt) + ".")
                 else:
                     self.prompt = None
         return super().handle_parse_result(ctx, opts, args)
@@ -78,7 +80,8 @@ def cli(ctx, quiet, verbose):
     Configuration is handled on three levels: store > local config > global config.
     Store is an internal giTrack's data storage, where data are written during initialization.
     Local config is an .gitrack file placed in root of the Git repository and hence bound to the repository.
-    Global config is a file placed in system's location for application configs. For Linux: ~/.config/gitrack/default.config.
+    Global config is a file placed in system's location for application configs.
+    For Linux: ~/.config/gitrack/default.config.
     For MacOS: ~/Library/Application Support/gitrack/default.config. It is config where the common setting for all
     repositories.
 
@@ -140,14 +143,19 @@ def start(ctx, force):
 
 
 @cli.command(short_help='Stops time tracking')
+@click.option('--cancel', '-c', is_flag=True,
+              help='If the currently running time entry should be canceled and not saved.')
 @click.option('--description', '-d', help='Description for the running time entry')
 @click.pass_context
-def stop(ctx, description):
+def stop(ctx, cancel, description):
     """
     Stops the time tracking with message if provided.
     """
     if ctx.obj['config'].store['running']:
-        ctx.obj['provider'].stop(description)
+        if cancel:
+            ctx.obj['provider'].cancel()
+        else:
+            ctx.obj['provider'].stop(description)
 
 
 @cli.command(short_help='Initialize Git repo for time tracking')
@@ -172,8 +180,9 @@ def init(ctx, check, install_hook, no_hook, config_destination):
       - internal storage (store)
       - local config (local) - file in root of the repository
 
-    It is possible to initialize giTrack without automatic installation of the Git's hook. Then it is your responsibility
-    to ensure that on 'post-commit' hook the giTrack command 'gitrack hooks post-commit' is called.
+    It is possible to initialize giTrack without automatic installation of the Git's hook.
+    Then it is your responsibility to ensure that on 'post-commit' hook the giTrack command
+    'gitrack hooks post-commit' is called.
     """
     repo_dir = ctx.obj['repo_dir']
 
@@ -190,8 +199,7 @@ def init(ctx, check, install_hook, no_hook, config_destination):
 
 
 @cli.group(short_help='Git hooks invocations')
-@click.pass_context
-def hooks(ctx):
+def hooks():
     """
     Internal group of commands for handling Git's hooks
     """
@@ -232,12 +240,13 @@ def hooks_post_commit(ctx, force):
 
 
 @cli.command('prompt', short_help='Handles integration to shell\'s prompt')
-@click.option('--activate', cls=Mutex, not_required_if=('deactivate',), is_flag=True, help='Command will only activate the giTrack\'s prompt, no toggling.')
-@click.option('--deactivate', cls=Mutex, not_required_if=('activate',), is_flag=True, help='Command will only deactivate the giTrack\'s prompt, no toggling.')
+@click.option('--activate', cls=Mutex, not_required_if=('deactivate',), is_flag=True,
+              help='Command will only activate the giTrack\'s prompt, no toggling.')
+@click.option('--deactivate', cls=Mutex, not_required_if=('activate',), is_flag=True,
+              help='Command will only deactivate the giTrack\'s prompt, no toggling.')
 @click.option('--style', '-s', type=click.Choice(['simple', 'clock']),
               default='simple', help='Defines look of the installed prompt')
-@click.pass_context
-def prompt_cmd(ctx, activate, deactivate, style):
+def prompt_cmd(activate, deactivate, style):
     """
     Command which activates/deactivates shell's prompt integration.
 
@@ -292,5 +301,3 @@ def install(append, case_insensitive, shell, path):
     extra_env = {'_GITRACK_CASE_INSENSITIVE_COMPLETE': 'ON'} if case_insensitive else {}
     shell, path = click_completion.core.install(shell=shell, path=path, append=append, extra_env=extra_env)
     click.echo('%s completion installed in %s' % (shell, path))
-
-
