@@ -6,4 +6,4 @@ inquirer==2.5.1
 psutil==5.4.8
 click-completion==0.5.0
 pbr==5.1.1
-requests
+requests==2.21.0
