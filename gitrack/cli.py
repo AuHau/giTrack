@@ -31,7 +31,9 @@ class Mutex(click.Option):
     def __init__(self, *args, **kwargs):
         self.not_required_if = kwargs.pop("not_required_if")
 
-        assert self.not_required_if, "'not_required_if' parameter required"
+        if not self.not_required_if:
+            raise AssertionError("'not_required_if' parameter required")
+
         kwargs["help"] = (kwargs.get("help", "") + "Option is mutually exclusive with "
                           + ", ".join(self.not_required_if) + ".").strip()
         super().__init__(*args, **kwargs)

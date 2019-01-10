@@ -39,13 +39,13 @@ This has to be supported by your chosen provider.
 
 There are three modes how this is done:
 
- * static mode - an static value defined by you during the `init` phase.
- * dynamic mode based on branch name - dynamically parsed value from the current branch's name when the commit is created.
- * dynamic mode based on commit message - dynamically parsed value from the commit message.
+* static mode - an static value defined by you during the `init` phase.
+* dynamic mode based on branch name - dynamically parsed value from the current branch's name when the commit is created.
+* dynamic mode based on commit message - dynamically parsed value from the commit message.
  
- For the dynamic modes the parsing is done using Python Regex that you have to supply during initialization. 
- This regex needs to contain capturing group with name `task`, that needs to extract the name or ID of the task, 
- that should be assigned to the time entry.
+For the dynamic modes the parsing is done using Python Regex that you have to supply during initialization. 
+This regex needs to contain capturing group with name `task`, that needs to extract the name or ID of the task, 
+that should be assigned to the time entry.
 
 ## Project support
 

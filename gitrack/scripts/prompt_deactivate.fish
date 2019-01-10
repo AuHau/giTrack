@@ -1,3 +1,5 @@
+#!/usr/bin/env fish
+
 set -e GITRACK_DATA
 
 functions -e fish_prompt

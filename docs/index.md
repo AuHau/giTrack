@@ -11,9 +11,9 @@ requirement (and it will at least motivate the developer to write proper commit'
 
 ## Requirements
 
- * Python 3.5 and higher
- * Git
- * Platform: Linux or MacOS
+* Python 3.5 and higher
+* Git
+* Platform: Linux or MacOS
 
 ## Quick start
 
@@ -50,5 +50,5 @@ $ gitrack stop
 
 giTracks has notion of providers which are the backends where the time entries are stored. Currently supported providers:
 
- * [Toggl](./providers.md#toggl)
+* [Toggl](./providers.md#toggl)
   

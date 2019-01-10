@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+
+
     function gitrack_status() {
         local slashes=${PWD//[^\/]/}
         local directory="$PWD"

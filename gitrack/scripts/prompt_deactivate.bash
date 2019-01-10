@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
     PS1="$_OLD_GITRACK_PS1"
 

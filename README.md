@@ -21,7 +21,7 @@ requirement (and it will at least motivate the developer to write proper commit'
 
 giTracks has notion of providers which are the backends where the time entries are stored. Current providers:
 
- * [Toggl](https://toggl.com)
+* [Toggl](https://toggl.com)
  
 Feel free to open an issue with a request for new providers! Anything that has an API should be possible to plug-in.
 
