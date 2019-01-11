@@ -22,6 +22,9 @@ jobs:
         server: https://test.pypi.org/legacy/
         distributions: sdist bdist_wheel
         skip_existing: true
+        on:
+          tags: true
+          repo: AuHau/giTrackd
         password:
           secure: WAPppHaid5159E0xuWkKrRPs7auG+2tm0vU9yX9eG2jjcLNJDAVeBWBnpXzyYhkUMivvg5Lkzij0C1844gRkd2KskCActIcfxXzH/nBKCX0BrgawrwYvnl3Uif+PL3Hn/aXCE13e4CR0XPHyukv8xfG0IkmMy9z1TxAqrkXu34xK3EdzAt5LBDWvH1OLMEOb1qchYkKbmaIGXfJb7icOFJhTYW8UfOxiCgX9xensfZ/sHEmPWw8Mw6n168qTvq1+xUGs3dzU4IWdzyZmVWH+2UpULba1JTRp4MKx5newjAGr+mVrcKu0l44MEQZFiMG40DlU3LxOJ+yNKVRzlNi5VdKehukPq6skmPfQXctqy+nQY7h+6w1SY1S1COC73T499datyKeJvxZChhz6Et1fn9t5lH0mNKGVu6mbjZ9hE/r5SgPt70L75ZA1leNPnMP+FrM44fCfjnmVUXW7P32cPPiFrmPZufExkeDsy49wB01XOH2yr+dIaIK+ZGXlqNs9kb4Ihzd72bDrJf2jrhLYxE81LjUU/yhu1ROnrLJd7vhzIQ+VF5mdfSDg2zC9WlRZvdW9Fmx5Qrtapvh2Uuw5kqo0ZUwH/kdVoDY6bKnfVhTjpQlwqMIEXS9Z1/+SyQk2TwFKBTOnKFW1kYdRozvDVT6np+zCinOo2TL8j4Ol+BU=
     - stage: deploy-mkdocs
