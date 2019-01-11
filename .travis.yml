@@ -20,7 +20,6 @@ jobs:
         provider: pypi
         user: AuHau-test
         server: https://test.pypi.org/legacy/
-        distributions: sdist bdist_wheel
         skip_existing: true
         on:
           tags: true
