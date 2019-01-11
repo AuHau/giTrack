@@ -26,7 +26,7 @@ jobs:
       script:
         - git config user.name "Adam Uhlir";
         - git config user.email "hello@adam-uhlir.me";
-        - git remote add gh-token "https://${GH_TOKEN}@github.com/AuHau/toggl-cli.git";
+        - git remote add gh-token "https://${GH_TOKEN}@github.com/AuHau/giTrack.git";
         - git fetch gh-token && git fetch gh-token gh-pages:gh-pages;
         - mkdocs gh-deploy -v --clean --remote-name gh-token;
     - stage: deploy
@@ -41,6 +41,7 @@ jobs:
       deploy:
         provider: releases
         skip_cleanup: true
+        api_key: ${GH_TOKEN}
         draft: true
         file:
           - ./build/gitrack.linux-x86_64
