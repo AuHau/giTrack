@@ -1,4 +1,3 @@
-import os
 import pathlib
 import psutil
 
@@ -92,8 +91,8 @@ def execute(style):
     """
     Prints shell script to STDOUT that toggl the prompt's enhancements.
 
-    :param style: 
-    :return: 
+    :param style: Defines the style of the prompt
+    :return:
     """
     data_dir = str(config.get_data_dir() / 'repos')
     shell = _get_shell()
