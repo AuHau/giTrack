@@ -1,13 +1,19 @@
 stages:
-  - name: deploy
+  - name: deploy-pip
+    if: tag IS present
+  - name: deploy-mkdocs
+    if: tag IS present
+  - name: deploy-release
     if: tag IS present
 
 jobs:
   include:
-    - stage: deploy
+    - stage: deploy-pip
       name: "Publish to PyPi"
       language: python
       python: '3.7'
+      dist: xenial
+      sudo: true
       install:
         - pip install -r test-requirements.txt
       deploy:
@@ -18,10 +24,12 @@ jobs:
         skip_existing: true
         password:
           secure: WAPppHaid5159E0xuWkKrRPs7auG+2tm0vU9yX9eG2jjcLNJDAVeBWBnpXzyYhkUMivvg5Lkzij0C1844gRkd2KskCActIcfxXzH/nBKCX0BrgawrwYvnl3Uif+PL3Hn/aXCE13e4CR0XPHyukv8xfG0IkmMy9z1TxAqrkXu34xK3EdzAt5LBDWvH1OLMEOb1qchYkKbmaIGXfJb7icOFJhTYW8UfOxiCgX9xensfZ/sHEmPWw8Mw6n168qTvq1+xUGs3dzU4IWdzyZmVWH+2UpULba1JTRp4MKx5newjAGr+mVrcKu0l44MEQZFiMG40DlU3LxOJ+yNKVRzlNi5VdKehukPq6skmPfQXctqy+nQY7h+6w1SY1S1COC73T499datyKeJvxZChhz6Et1fn9t5lH0mNKGVu6mbjZ9hE/r5SgPt70L75ZA1leNPnMP+FrM44fCfjnmVUXW7P32cPPiFrmPZufExkeDsy49wB01XOH2yr+dIaIK+ZGXlqNs9kb4Ihzd72bDrJf2jrhLYxE81LjUU/yhu1ROnrLJd7vhzIQ+VF5mdfSDg2zC9WlRZvdW9Fmx5Qrtapvh2Uuw5kqo0ZUwH/kdVoDY6bKnfVhTjpQlwqMIEXS9Z1/+SyQk2TwFKBTOnKFW1kYdRozvDVT6np+zCinOo2TL8j4Ol+BU=
-    - stage: deploy
+    - stage: deploy-mkdocs
       name: "Publish documentation"
       language: python
       python: '3.7'
+      dist: xenial
+      sudo: true
       install:
         - pip install -r test-requirements.txt
       script:
@@ -30,10 +38,12 @@ jobs:
         - git remote add gh-token "https://${GH_TOKEN}@github.com/AuHau/giTrack.git";
         - git fetch gh-token && git fetch gh-token gh-pages:gh-pages;
         - mkdocs gh-deploy -v --clean --remote-name gh-token;
-    - stage: deploy
+    - stage: deploy-release
       name: "Build and publish PEX to draft release"
       language: python
       python: '3.7'
+      dist: xenial
+      sudo: true
       install:
         - pip install pex
       script:
