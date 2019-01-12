@@ -49,8 +49,8 @@ jobs:
       install:
         - pip install pex
       script:
-        - pex --index-url=https://test.pypi.org/simple/ --python=python3 -r requirements.txt -o ./build/gitrack.linux-x86_64 --platform linux-x86_64 -e gitrack.main gitrack setuptools
-        - pex --index-url=https://test.pypi.org/simple/ --python=python3 -r requirements.txt -o ./build/gitrack.macosx-10.6-x86_64 --platform macosx-10.6-x86_64 -e gitrack.main gitrack setuptools
+        - pex -vvv --index-url=https://test.pypi.org/simple/ --python=python3 -r requirements.txt -o ./build/gitrack.linux-x86_64 --platform linux-x86_64 --manylinux -e gitrack.main gitrack setuptools
+        - pex -vvv --index-url=https://test.pypi.org/simple/ --python=python3 -r requirements.txt -o ./build/gitrack.macosx_x86_64 --platform macosx_10_12_x86_64 --platform macosx_10_13_x86_64 --platform macosx_10_14_x86_64 -e gitrack.main gitrack setuptools
       deploy:
         provider: releases
         skip_cleanup: true
@@ -58,4 +58,4 @@ jobs:
         draft: true
         file:
           - ./build/gitrack.linux-x86_64
-          - ./build/gitrack.macosx-10.6-x86_64
+          - ./build/gitrack.macosx-x86_64
