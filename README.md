@@ -1,6 +1,6 @@
 # giTrack
 
-[![giTrack demonstration](./docs/assets/demonstration-short.gif)](https://asciinema.org/a/220104)
+[![giTrack demonstration](https://raw.githubusercontent.com/AuHau/giTrack/master/docs/assets/demonstration-short.gifq)](https://asciinema.org/a/220104)
 
 ![Platform](https://img.shields.io/badge/platform-macos%20%7C%20linux-lightgrey.svg)
 [![PyPI version](https://badge.fury.io/py/gitrack.svg)](https://badge.fury.io/py/gitrack) 
