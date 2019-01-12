@@ -1,5 +1,6 @@
+import os
 import pathlib
-import psutil
+import subprocess
 
 import click
 
@@ -39,15 +40,15 @@ end""",
 
 
 def _get_shell():
-    # TODO: [Q] Is psutil dependency really necessary?
     # TODO: [Q] Some more extensive checks? Or Parent is always a shell?
-    parent_name = psutil.Process().parent().name()
+    result = subprocess.run(['ps', '-p', str(os.getppid()), '-o', 'command='], stdout=subprocess.PIPE)
+    command = str(result.stdout)
 
     for supported_shell in SUPPORTED_SHELLS:
-        if supported_shell in parent_name:
+        if supported_shell in command:
             return supported_shell
 
-    raise exceptions.UnknownShell('Shell \'{}\' is not supported!'.format(parent_name))
+    raise exceptions.UnknownShell('Shell \'{}\' is not supported!'.format(command))
 
 
 def activate(style):
