@@ -95,6 +95,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# packaging
+AUTHORS
+ChangeLog
+
 # mkdocs documentation
 /site
 
