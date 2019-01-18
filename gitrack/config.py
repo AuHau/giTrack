@@ -357,5 +357,11 @@ class Store:
         with repo_file.open('wb') as file:
             pickle.dump({}, file)
 
+    @classmethod
+    def get_for_repo(cls, repo_dir):
+        name = repo_name(repo_dir)
+        path = get_data_dir() / 'repos' / name
+        return cls(path)
+
     def __str__(self):
         return 'Store({})'.format(self._path)

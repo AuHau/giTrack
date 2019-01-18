@@ -92,6 +92,7 @@ def cli(ctx, quiet, verbose):
     """
     repo_dir = helpers.get_repo_dir()
     ctx.obj['repo_dir'] = repo_dir
+    print(repo_dir)
 
     main_logger = logging.getLogger('gitrack')
     main_logger.setLevel(logging.DEBUG)
@@ -162,7 +163,7 @@ def stop(ctx, cancel, description):
 
 @cli.command(short_help='Initialize Git repo for time tracking')
 @click.option('--check', is_flag=True, help='Instead of initializing the repo, checks whether it has '
-                                            'been initialized before. If not exits the command with status code 2')
+                                            'been initialized before. If not exits the command with exit code 2')
 @click.option('--install-hook', is_flag=True, help='If you want to just install hook without initialization.')
 @click.option('--no-hook', is_flag=True, help='If you want to skip Git\'s hook installation. You will be responsible to'
                                               ' set properly the hook to call \'gitrack hooks post-commit\'.'
