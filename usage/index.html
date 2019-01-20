@@ -343,6 +343,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#direnv-tip" title="Direnv tip" class="md-nav__link">
+    Direnv tip
+  </a>
+  
+</li>
+      
       
       
       
@@ -417,6 +424,13 @@
         <li class="md-nav__item">
   <a href="#shell-completion" title="Shell completion" class="md-nav__link">
     Shell completion
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#direnv-tip" title="Direnv tip" class="md-nav__link">
+    Direnv tip
   </a>
   
 </li>
@@ -512,6 +526,12 @@ place the activating command into your <code>rc</code> file. </p>
 <p>This command will install completion based on your current shell, it mostly consist of adding 
 <code>_GITRACK_COMPLETE</code> variable to your <code>rc</code> file. If you want to inspect details you can
 run <code>gitrack completion show</code>.</p>
+<h2 id="direnv-tip">Direnv tip<a class="headerlink" href="#direnv-tip" title="Permanent link">&para;</a></h2>
+<p>For even more automatization, you can use awesome tool <a href="https://github.com/direnv/direnv">direnv</a> for 
+automatically starting tracking when you change directory into your Git repo. Unfortunately
+there is currently no support for unloading-hook (the support for it is discussed 
+<a href="https://github.com/direnv/direnv/issues/129">here</a>, you can ask authors to incorporate into their work), so
+ you still have to stop your time tracking manually when you are done.</p>
                 
                   
                 
