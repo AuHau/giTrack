@@ -28,7 +28,7 @@ jobs:
     - stage: deploy-pip
       name: "Publish to PyPi"
       language: python
-      python: '3.7'
+      python: '3.6'
       dist: xenial
       sudo: true
       script:
@@ -46,7 +46,7 @@ jobs:
     - stage: deploy-mkdocs
       name: "Publish documentation"
       language: python
-      python: '3.7'
+      python: '3.6'
       dist: xenial
       sudo: true
       install:
