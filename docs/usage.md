@@ -83,3 +83,11 @@ To enable the completion run `gitrack completion install`.
 This command will install completion based on your current shell, it mostly consist of adding 
 `_GITRACK_COMPLETE` variable to your `rc` file. If you want to inspect details you can
 run `gitrack completion show`.
+
+## Direnv tip
+
+For even more automatization, you can use awesome tool [direnv](https://github.com/direnv/direnv) for 
+automatically starting tracking when you change directory into your Git repo. Unfortunately
+there is currently no support for unloading-hook (the support for it is discussed 
+[here](https://github.com/direnv/direnv/issues/129), you can ask authors to incorporate into their work), so
+ you still have to stop your time tracking manually when you are done.

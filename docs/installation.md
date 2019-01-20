@@ -21,4 +21,4 @@ $ curl https://raw.githubusercontent.com/AuHau/gitrack/master/bin/install.sh | b
     It is always good idea to read through the installing script before you run it! Especially those which
     require `sudo` access. You should trust nobody with that privilege! 
     
-    That said there is not anything malicious in this one ;-) 
+    That said there is nothing malicious in this one ;-) 
