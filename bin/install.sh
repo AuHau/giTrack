@@ -40,7 +40,7 @@ fetch_pex(){
     if [[ "$unamestr" == "Linux" ]]; then
        platform="linux"
     elif [[ "$unamestr" == "Darwin" ]]; then
-       platform="macosx-10.6"
+       platform="macosx"
     else
         echoerr "Unsupported platform!"
         exit 1
@@ -51,7 +51,7 @@ fetch_pex(){
     destination=$2
 
     url="https://github.com/${REPO_NAME}/releases/download/${version}/${DOWNLOAD_FILE_NAME_BASE}.${platform}"
-    curl --silent ${url} > ${destination}
+    curl --silent -L ${url} > ${destination}
 }
 
 #####################
@@ -64,6 +64,11 @@ echo "Downloading '${CMD_NAME}' in latest version ${version}"
 fetch_pex ${version} ${tmp_destination}
 
 echo "Installing it to: ${DESTINATION}"
+
+if [[ -e "${DESTINATION}/${CMD_NAME}" ]]; then
+    echo "Detected previous version; it will be rewritten."
+fi
+
 sudo cp ${tmp_destination} "${DESTINATION}/${CMD_NAME}"
 
 echo "Successfully installed!"
