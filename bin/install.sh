@@ -62,6 +62,7 @@ tmp_destination="/tmp/${CMD_NAME}"
 
 echo "Downloading '${CMD_NAME}' in latest version ${version}"
 fetch_pex ${version} ${tmp_destination}
+chmod +x ${tmp_destination}
 
 echo "Installing it to: ${DESTINATION}"
 
