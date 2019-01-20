@@ -137,6 +137,9 @@ def _create_gitrack_post_commit_executable(hooks_dir):  # type: (pathlib.Path) -
     gitrack_post_commit_executable = hooks_dir / GITRACK_POST_COMMIT_EXECUTABLE_FILENAME
     gitrack_binary = shutil.which('gitrack')
 
+    if gitrack_binary is None:
+        raise RuntimeError('gitrack binary can not be found!')
+
     with (pathlib.Path(__file__).parent / 'scripts' / 'post_commit_executable_template.sh').open('r') as f:
         template = f.read().replace(CMD_PATH_PLACEHOLDER, gitrack_binary)
 

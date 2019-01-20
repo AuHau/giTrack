@@ -6,9 +6,7 @@ from .helpers import ProviderForTesting
 class TestHooks:
 
     def test_basic(self, cmd, mocker, commit):
-        result, repo_dir = cmd('init', inited=False, git_inited=True)
-        assert result.exit_code == 0
-        result, repo_dir = cmd('start')
+        result, repo_dir = cmd('start', git_inited=True)
         assert result.exit_code == 0
 
         mocker.spy(ProviderForTesting, 'stop')
@@ -22,7 +20,7 @@ class TestHooks:
         ProviderForTesting.start.assert_called_once_with(mock.ANY)
 
     def test_ignored_non_running_repos(self, cmd, mocker, commit):
-        result, repo_dir = cmd('init', inited=False, git_inited=True)
+        result, repo_dir = cmd('init --no-hook', inited=False, git_inited=True)
         assert result.exit_code == 0
 
         mocker.spy(ProviderForTesting, 'stop')
@@ -36,9 +34,7 @@ class TestHooks:
         assert ProviderForTesting.start.call_count == 0
 
     def test_task_static(self, cmd, mocker, commit):
-        result, repo_dir = cmd('init', inited=False, git_inited=True)
-        assert result.exit_code == 0
-        result, repo_dir = cmd('start')
+        result, repo_dir = cmd('start', git_inited=True)
         assert result.exit_code == 0
 
         mocker.spy(ProviderForTesting, 'stop')
@@ -52,9 +48,7 @@ class TestHooks:
         ProviderForTesting.start.assert_called_once_with(mock.ANY)
 
     def test_task_dynamic_branch(self, cmd, mocker, commit):
-        result, repo_dir = cmd('init', inited=False, git_inited=True)
-        assert result.exit_code == 0
-        result, repo_dir = cmd('start')
+        result, repo_dir = cmd('start', git_inited=True)
         assert result.exit_code == 0
 
         mocker.spy(ProviderForTesting, 'stop')
@@ -68,9 +62,7 @@ class TestHooks:
         ProviderForTesting.start.assert_called_once_with(mock.ANY)
 
     def test_task_dynamic_commit(self, cmd, mocker, commit):
-        result, repo_dir = cmd('init', inited=False, git_inited=True)
-        assert result.exit_code == 0
-        result, repo_dir = cmd('start')
+        result, repo_dir = cmd('start', git_inited=True)
         assert result.exit_code == 0
 
         mocker.spy(ProviderForTesting, 'stop')
@@ -84,9 +76,7 @@ class TestHooks:
         ProviderForTesting.start.assert_called_once_with(mock.ANY)
 
     def test_project(self, cmd, mocker, commit):
-        result, repo_dir = cmd('init', inited=False, git_inited=True)
-        assert result.exit_code == 0
-        result, repo_dir = cmd('start')
+        result, repo_dir = cmd('start', git_inited=True)
         assert result.exit_code == 0
 
         mocker.spy(ProviderForTesting, 'stop')

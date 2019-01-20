@@ -33,7 +33,9 @@ def store(tmp_path):
     os.environ['GITRACK_STORAGE'] = str(store_path)
 
     yield store_path
-    os.environ['GITRACK_STORAGE'] = original_storage
+
+    if original_storage is not None:
+        os.environ['GITRACK_STORAGE'] = original_storage
 
 
 @pytest.fixture()
