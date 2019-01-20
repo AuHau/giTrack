@@ -1,9 +1,11 @@
 import configparser
+import logging
 import os
 import pathlib
 import pickle
 import typing
 import abc
+import pprint
 from collections import namedtuple
 from enum import Enum
 
@@ -12,6 +14,7 @@ import appdirs
 from gitrack import exceptions, APP_NAME, LOCAL_CONFIG_NAME, Providers, TaskParsingModes
 
 IniEntry = namedtuple('IniEntry', ['section', 'type'])
+logger = logging.getLogger('gitrack.config')
 
 
 def get_data_dir():  # type: () -> pathlib.Path
@@ -342,9 +345,11 @@ class Store:
     def load(self):
         with self._path.open('rb') as file:
             self.data = pickle.load(file)
+            logger.debug("Store loading from this path: {}\nThis data:\n{}".format(self._path, pprint.pformat(self.data)))
 
     def save(self):
         with self._path.open('wb') as file:
+            logger.debug("Store saving to this path: {}\nThis data:\n{}".format(self._path, pprint.pformat(self.data)))
             pickle.dump(self.data, file)
 
     @classmethod
@@ -360,7 +365,7 @@ class Store:
     @classmethod
     def get_for_repo(cls, repo_dir):
         name = repo_name(repo_dir)
-        path = get_data_dir() / 'repos' / name
+        path = get_data_dir() / 'repos' / name / 'data.pickle'
         return cls(path)
 
     def __str__(self):

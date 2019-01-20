@@ -12,7 +12,7 @@ class TestInit:
         assert (repo_dir / '.git' / 'hooks' / 'post-commit').exists() is False
         assert (repo_dir / '.git' / 'hooks' / 'post-commit.gitrack').exists() is False
 
-        result = cmd('init', repo_dir=repo_dir, inited=False)  # type: Result
+        result, _ = cmd('init', repo_dir=repo_dir, inited=False)  # type: Result
         assert result.exit_code == 0
 
         assert helpers.is_repo_initialized(repo_dir) is True
@@ -24,7 +24,7 @@ class TestInit:
         assert (repo_dir / '.git' / 'hooks' / 'post-commit').exists() is False
         assert (repo_dir / '.git' / 'hooks' / 'post-commit.gitrack').exists() is False
 
-        result = cmd('init --no-hook', repo_dir=repo_dir, inited=False)  # type: Result
+        result, _ = cmd('init --no-hook', repo_dir=repo_dir, inited=False)  # type: Result
         assert result.exit_code == 0
 
         assert helpers.is_repo_initialized(repo_dir) is True
@@ -38,10 +38,10 @@ class TestInit:
             cmd('init', repo_dir=inited_repo_dir, inited=False)  # type: Result
 
     def test_check(self, cmd):
-        result = cmd('init --check', inited=False)  # type: Result
+        result, _ = cmd('init --check', inited=False)  # type: Result
         assert result.exit_code == 2
 
-        result = cmd('init --check', inited=True)  # type: Result
+        result, _ = cmd('init --check', inited=True)  # type: Result
         assert result.exit_code == 0
 
     def test_hook_install(self, repo_dir, cmd):
@@ -49,11 +49,9 @@ class TestInit:
         assert (repo_dir / '.git' / 'hooks' / 'post-commit').exists() is False
         assert (repo_dir / '.git' / 'hooks' / 'post-commit.gitrack').exists() is False
 
-        result = cmd('init --install-hook', repo_dir=repo_dir, inited=False)  # type: Result
+        result, _ = cmd('init --install-hook', repo_dir=repo_dir, inited=False)  # type: Result
         assert result.exit_code == 0
 
         assert helpers.is_repo_initialized(repo_dir) is False
         assert (repo_dir / '.git' / 'hooks' / 'post-commit').exists() is True
         assert (repo_dir / '.git' / 'hooks' / 'post-commit.gitrack').exists() is True
-
-

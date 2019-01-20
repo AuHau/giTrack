@@ -92,7 +92,6 @@ def cli(ctx, quiet, verbose):
     """
     repo_dir = helpers.get_repo_dir()
     ctx.obj['repo_dir'] = repo_dir
-    print(repo_dir)
 
     main_logger = logging.getLogger('gitrack')
     main_logger.setLevel(logging.DEBUG)
@@ -141,6 +140,8 @@ def start(ctx, force):
     """
     Starts the time tracking.
     """
+    logger.debug("What does Store things about this repo? Is it currently running?: {}"
+                 .format(ctx.obj['config'].store['running']))
     if not ctx.obj['config'].store['running']:
         ctx.obj['provider'].start(force)
 

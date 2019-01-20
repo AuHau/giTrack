@@ -1,4 +1,3 @@
-import os
 import re
 import shutil
 from enum import Enum
@@ -7,7 +6,7 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from gitrack import cli
+from gitrack import cli, config
 from gitrack.providers import AbstractProvider
 
 
@@ -17,10 +16,7 @@ def inner_cmd(cmd):  # type: (str) -> ParsingResult
                         cmd)  # Simulates quoting of strings with spaces (eq. filter -n "some important task")
     args = [i[1] or i[3] or i[4] for i in parsed]
 
-    print(os.getcwd())
-
     result = CliRunner().invoke(cli.cli, args, obj={}, catch_exceptions=False)
-
     print(result.stdout)
 
     return result
@@ -36,7 +32,11 @@ def set_config(repo_dir, config='default.config'):
     shutil.copyfile(str(config_path), str(repo_dir / '.gitrack'))
 
 
-class TestProvider(AbstractProvider):
+def repo_data_dir(repo_dir):
+    return config.get_data_dir() / 'repos' / config.repo_name(repo_dir)
+
+
+class ProviderForTesting(AbstractProvider):
 
     @classmethod
     def init(cls):
@@ -51,19 +51,3 @@ class TestProvider(AbstractProvider):
     def cancel(self):
         super().cancel()
 
-
-class TestProvidersEnum(Enum):
-    TEST = 'test'
-    TOGGL = 'toggl'
-
-    def klass(self):
-        if self == self.TEST:
-            return TestProvider
-        elif self == self.TOGGL:
-            from gitrack.providers.toggl import TogglProvider
-            return TogglProvider
-
-        raise RuntimeError('Unknown provider!')
-
-    def __str__(self):
-        return self.value

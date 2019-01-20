@@ -6,7 +6,7 @@ import pathlib
 import git
 
 import gitrack
-from gitrack import config as config_module
+from gitrack import config as config_module, helpers as helpers_module
 
 from . import helpers
 
@@ -43,7 +43,7 @@ def cmd(repo_dir, store):
         if repo_dir is None:
             repo_dir = tmp_repo_dir
 
-        if inited:
+        if inited and not helpers_module.is_repo_initialized(repo_dir):
             config_module.Store.init_repo(repo_dir)
 
         os.chdir(str(repo_dir))
@@ -53,13 +53,13 @@ def cmd(repo_dir, store):
             git.Repo.init(str(repo_dir))
 
         helpers.set_config(repo_dir, config)
-        return helpers.inner_cmd(cmd)
+        return helpers.inner_cmd(cmd), repo_dir
 
     return _cmd
 
 
-@pytest.fixture(scope='session', autouse=True)
+@pytest.fixture(autouse=True)
 def patch_providers():
-    with mock.patch.object(gitrack, 'Providers') as _fixture:
-        _fixture.return_value = helpers.TestProvidersEnum
+    with mock.patch.object(gitrack.Providers, 'klass') as _fixture:
+        _fixture.return_value = helpers.ProviderForTesting
         yield
