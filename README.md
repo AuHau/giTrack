@@ -1,6 +1,6 @@
 # giTrack
 
-[![giTrack demonstration](https://raw.githubusercontent.com/AuHau/giTrack/master/docs/assets/demonstration-short.gifq)](https://asciinema.org/a/220104)
+[![giTrack demonstration](https://raw.githubusercontent.com/AuHau/giTrack/master/docs/assets/demonstration-short.gif)](https://asciinema.org/a/220104)
 
 ![Platform](https://img.shields.io/badge/platform-macos%20%7C%20linux-lightgrey.svg)
 [![PyPI version](https://badge.fury.io/py/gitrack.svg)](https://badge.fury.io/py/gitrack) 
@@ -67,8 +67,8 @@ $ gitrack stop
 
 Feel free to dive in, contributions are welcomed! [Open an issue](https://github.com/auhau/gitrack/issues/new) or submit PRs.
 
-For PRs and tips about development please see [contribution guideline](./CONTRIBUTING.md).
+For PRs and tips about development please see [contribution guideline](https://github.com/AuHau/giTrack/blob/master/CONTRIBUTING.md).
 
 ## License
 
-[MIT ©  Adam Uhlir](./LICENSE)
+[MIT ©  Adam Uhlir](https://github.com/AuHau/giTrack/blob/master/LICENSE)
