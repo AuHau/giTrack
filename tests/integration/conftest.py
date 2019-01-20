@@ -1,4 +1,5 @@
 import os
+import shutil
 from unittest import mock
 
 import pytest
@@ -36,6 +37,27 @@ def store(tmp_path):
 
 
 @pytest.fixture()
+def commit(repo_dir):
+    def _inner(msg, files=None, branch=None):
+        repo = git.Repo(str(repo_dir))
+
+        if branch is not None:
+            repo.git.checkout(b=branch)
+
+        if files is None:
+            some_file = (repo_dir / 'some-file')  # type: pathlib.Path
+            some_file.write_text('Some text')
+            files = ['some-file']
+
+        index = repo.index
+        index.add(files)
+        index.commit(msg, skip_hooks=True)
+
+    return _inner
+
+
+
+@pytest.fixture()
 def cmd(repo_dir, store):
     tmp_repo_dir = repo_dir
 
@@ -49,7 +71,7 @@ def cmd(repo_dir, store):
         os.chdir(str(repo_dir))
 
         if git_inited:
-            (repo_dir / '.git').rmdir()
+            shutil.rmtree(str(repo_dir / '.git'))
             git.Repo.init(str(repo_dir))
 
         helpers.set_config(repo_dir, config)

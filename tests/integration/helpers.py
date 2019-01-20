@@ -17,7 +17,7 @@ def inner_cmd(cmd):  # type: (str) -> ParsingResult
     args = [i[1] or i[3] or i[4] for i in parsed]
 
     result = CliRunner().invoke(cli.cli, args, obj={}, catch_exceptions=False)
-    print(result.stdout)
+    print(result.stdout)  # We want to pytest do the capturing as it will be displayed when tests fail
 
     return result
 
