@@ -13,6 +13,7 @@ click_completion.init()
 
 logger = logging.getLogger('gitrack.cli')
 
+
 # Ideas for future
 # TODO: [?] Offline mode
 # TODO: Automatic pausing using file activities (watchdog)
@@ -28,6 +29,7 @@ class Mutex(click.Option):
 
     Credits to: https://stackoverflow.com/questions/44247099/click-command-line-interfaces-make-options-required-if-other-optional-option-is
     """
+
     def __init__(self, *args, **kwargs):
         self.not_required_if = kwargs.pop("not_required_if")
 
@@ -128,8 +130,8 @@ def save_store(*args, **kwargs):
     if ctx.obj.get('config'):
         ctx.obj['config'].store.save()
 
-    # We don't want to populate output of shell's script with version warning.
-    if ctx.invoked_subcommand != 'prompt':
+    # We don't want to pollute certain invocations
+    if ctx.invoked_subcommand not in {'prompt', 'hooks'}:
         helpers.check_version()
 
 
