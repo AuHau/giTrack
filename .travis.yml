@@ -1,4 +1,5 @@
 stages:
+  - name: test
   - name: deploy-pip
     if: tag IS present
   - name: deploy-mkdocs
@@ -8,6 +9,22 @@ stages:
 
 jobs:
   include:
+    - stage: test
+      name: "Tests"
+      language: python
+      python:
+        - '3.5'
+        - '3.6'
+        - '3.7'
+      dist: xenial
+      sudo: true
+      install:
+        - pip install -r test-requirements.txt
+        - pip install codecov
+      script:
+        - pytest --cov gitrack
+      after_success:
+        - codecov
     - stage: deploy-pip
       name: "Publish to PyPi"
       language: python

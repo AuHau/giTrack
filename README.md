@@ -6,6 +6,7 @@
 [![PyPI version](https://badge.fury.io/py/gitrack.svg)](https://badge.fury.io/py/gitrack) 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/gitrack.svg)](https://pypi.org/project/gitrack)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/gitrack.svg)](https://pypi.org/project/gitrack/) 
+[![codecov](https://codecov.io/gh/AuHau/gitrack/branch/master/graph/badge.svg)](https://codecov.io/gh/AuHau/gitrack) 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/fd28ce2a500a4b1fab6f9a0a40e2fa80)](https://app.codacy.com/app/AuHau/giTrack?utm_source=github.com&utm_medium=referral&utm_content=AuHau/giTrack&utm_campaign=Badge_Grade_Dashboard)
 [![Updates](https://pyup.io/repos/github/AuHau/giTrack/shield.svg)](https://pyup.io/repos/github/AuHau/giTrack/)
 
@@ -44,7 +45,7 @@ $ curl https://raw.githubusercontent.com/AuHau/gitrack/master/bin/install.sh | b
 
 ## Usage
 
-For full overview of Toggl CLI capabilities please see [full documentation](https://gitrack.adam-uhlir.me).
+For full overview of giTrack's capabilities please see [full documentation](https://gitrack.adam-uhlir.me).
 
 ```shell
 # Initialize Git repo for giTrack's usage
@@ -64,7 +65,7 @@ $ gitrack stop
 
 ## Contributing
 
-Feel free to dive in, contributions are welcomed! [Open an issue](https://github.com/drobertadams/toggl-cli/issues/new) or submit PRs.
+Feel free to dive in, contributions are welcomed! [Open an issue](https://github.com/auhau/gitrack/issues/new) or submit PRs.
 
 For PRs and tips about development please see [contribution guideline](./CONTRIBUTING.md).
 
