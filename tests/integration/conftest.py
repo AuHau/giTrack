@@ -20,7 +20,7 @@ def repo_dir(tmp_path):  # type: (pathlib.Path) -> pathlib.Path
 
 
 @pytest.fixture()
-def inited_repo_dir(store, repo_dir):  # type: (pathlib.Path) -> pathlib.Path
+def inited_repo_dir(store, repo_dir):  # type: (pathlib.Path, pathlib.Path) -> pathlib.Path
     config_module.Store.init_repo(repo_dir)
     return repo_dir
 
