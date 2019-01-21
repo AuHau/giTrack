@@ -35,14 +35,14 @@ jobs:
         - pip install -r test-requirements.txt
       deploy:
         provider: pypi
-        user: AuHau-test
-        server: https://test.pypi.org/legacy/
+        user: AuHau-deploy
+        distributions: sdist bdist_wheel
         skip_existing: true
         on:
           tags: true
           repo: AuHau/giTrack
         password:
-          secure: WAPppHaid5159E0xuWkKrRPs7auG+2tm0vU9yX9eG2jjcLNJDAVeBWBnpXzyYhkUMivvg5Lkzij0C1844gRkd2KskCActIcfxXzH/nBKCX0BrgawrwYvnl3Uif+PL3Hn/aXCE13e4CR0XPHyukv8xfG0IkmMy9z1TxAqrkXu34xK3EdzAt5LBDWvH1OLMEOb1qchYkKbmaIGXfJb7icOFJhTYW8UfOxiCgX9xensfZ/sHEmPWw8Mw6n168qTvq1+xUGs3dzU4IWdzyZmVWH+2UpULba1JTRp4MKx5newjAGr+mVrcKu0l44MEQZFiMG40DlU3LxOJ+yNKVRzlNi5VdKehukPq6skmPfQXctqy+nQY7h+6w1SY1S1COC73T499datyKeJvxZChhz6Et1fn9t5lH0mNKGVu6mbjZ9hE/r5SgPt70L75ZA1leNPnMP+FrM44fCfjnmVUXW7P32cPPiFrmPZufExkeDsy49wB01XOH2yr+dIaIK+ZGXlqNs9kb4Ihzd72bDrJf2jrhLYxE81LjUU/yhu1ROnrLJd7vhzIQ+VF5mdfSDg2zC9WlRZvdW9Fmx5Qrtapvh2Uuw5kqo0ZUwH/kdVoDY6bKnfVhTjpQlwqMIEXS9Z1/+SyQk2TwFKBTOnKFW1kYdRozvDVT6np+zCinOo2TL8j4Ol+BU=
+          secure: rHJUt4Qc4JSjRcydN8Yh7gIcqGrbZAwyP2VbKrQBcowMAOMVuQLDZ/KZvcfEl2X5tcDaIgH/IIJm1DYxOqDyguho8jvEMrjgqRPFNzgO21eBvwMT5UEsA7mNnZ85lKLaW2LufS9p21UUVJhFcMy5d4hMkSJpJkC9y5RC3Jl15jVFSynbS4nLf5p28fg2gPab17z/RAICA3Muax9dsTiTDrtZ/hYHxuKm8ifFbuuGptmdU7q9q/oBmlboipdfcHzXJabpr3e62ZNmuot4byaA4xsWK00vFqIXGO0vHdwtdSKBNC68vCaonDxqJ3FS5HeioqGU1Dq4NBdnHQMR/8r4Gcq6WhQ/TI3lVKKAHTx8VJjO8DM/UKrNH/FRtPMSlvx8FDZ4LcvIvmNiz2gAF8cnvyqJPNVYtjYnkngtlOdLvnUIjBHJBCk10yeBCvMXCo+RkwpDY0QxsaSXLyRSkVjngbt6lg7l/BYcY3ZBom5KDMcjxDURe8rDxaPc05oVOLT04uwppKVcrJwJSomK6gajXAZwHaQhXC5jwVR+G9r69BdWawrJ1/mN8Atav9EPsahS4D9EzSBEBRRK1vgWEryW5kYJfamrGsxDfIlOZKUdBz+h8pWEt9PhIfC3WKcvwXAE3PNtfdQaqtQTktIzGCUIUro6z5a3ojtgaxG4Xm+cLJg=
     - stage: deploy-mkdocs
       name: "Publish documentation"
       language: python
@@ -66,8 +66,8 @@ jobs:
       install:
         - pip install pex
       script:
-        - pex -vv --index-url=https://test.pypi.org/simple/ --python=python3 -r requirements.txt -o ./build/gitrack.linux-x86_64 --platform linux-x86_64 --manylinux -e gitrack.main gitrack setuptools
-        # - pex -vvv --index-url=https://test.pypi.org/simple/ --python=python3 -r requirements.txt -o ./build/gitrack.macosx_x86_64 --platform macosx_10_12_x86_64 --platform macosx_10_13_x86_64 --platform macosx_10_14_x86_64 -e gitrack.main gitrack setuptools
+        - pex --python=python3 -r requirements.txt -o ./build/gitrack.linux-x86_64 --platform linux-x86_64 --manylinux -e gitrack.main gitrack setuptools
+        # - pex --python=python3 -r requirements.txt -o ./build/gitrack.macosx_x86_64 --platform macosx_10_12_x86_64 --platform macosx_10_13_x86_64 --platform macosx_10_14_x86_64 -e gitrack.main gitrack setuptools
       deploy:
         provider: releases
         skip_cleanup: true
@@ -76,3 +76,6 @@ jobs:
         file:
           - ./build/gitrack.linux-x86_64
           - ./build/gitrack.macosx-x86_64
+        on:
+          tags: true
+          repo: AuHau/giTrack
