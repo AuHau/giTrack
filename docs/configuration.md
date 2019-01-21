@@ -20,7 +20,7 @@ as common configuration for the team working in the repo.
 
 > binary internal storage
 
-Pickled giTrack's state with some level of configuration and 
+Pickled giTrack's state with some level of configuration and some other data about repos.
 
 ## Global configuration
 

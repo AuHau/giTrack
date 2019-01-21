@@ -6,6 +6,7 @@ from datetime import datetime
 import click
 import click_completion
 import git
+import inquirer
 
 from gitrack import helpers, prompt, config as config_module, __version__, exceptions
 
@@ -148,7 +149,14 @@ def start(ctx, force):
     logger.debug("What does Store things about this repo? Is it currently running?: {}"
                  .format(ctx.obj['config'].store['running']))
     if not ctx.obj['config'].store['running']:
-        ctx.obj['provider'].start(force)
+        try:
+            ctx.obj['provider'].start(force)
+        except exceptions.RunningEntry:
+            overwrite = inquirer.shortcuts.confirm('There is currently running time entry that '
+                                                   'will be overwritten, do you want to continue?', default=False)
+
+            if overwrite:
+                ctx.obj['provider'].start(force=True)
 
 
 @cli.command(short_help='Stops time tracking')

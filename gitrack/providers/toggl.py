@@ -57,8 +57,8 @@ class TogglProvider(AbstractProvider):
         if current:
             logger.info("Currently running entry: " + getattr(current, 'description', ''))
             if not force:
-                raise exceptions.ProviderException(self.NAME, 'There is currently running another '
-                                                              'time entry which would be overridden!')
+                raise exceptions.RunningEntry(self.NAME, 'There is currently running another '
+                                                         'time entry which would be overridden!')
 
         super().start()
         api.TimeEntry.start_and_save(created_with='gitrack', config=self.toggl_config,

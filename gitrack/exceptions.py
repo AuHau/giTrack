@@ -44,3 +44,7 @@ class ProviderException(GitrackException):
 
     def __str__(self):
         return 'Provider \'{}\': {}'.format(self.provider_name, self.message)
+
+
+class RunningEntry(ProviderException):
+    pass
