@@ -445,7 +445,7 @@ as common configuration for the team working in the repo.</p>
 <blockquote>
 <p>binary internal storage</p>
 </blockquote>
-<p>Pickled giTrack's state with some level of configuration and </p>
+<p>Pickled giTrack's state with some level of configuration and some other data about repos.</p>
 <h2 id="global-configuration">Global configuration<a class="headerlink" href="#global-configuration" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p><code>default.config</code> file placed in the OS-specific application configuration folder (see: <code>user_config_dir</code> in <a href="https://github.com/ActiveState/appdirs">appdirs</a>)</p>
@@ -505,6 +505,12 @@ can have different set of custom options. For that see the <a href="../providers
 <td><code>str</code></td>
 <td></td>
 <td>In case of <code>static</code> mode, the name or ID to be used.</td>
+</tr>
+<tr>
+<td>update_check</td>
+<td><code>bool</code></td>
+<td>True</td>
+<td>giTrack will check upon invocation if there is a newer version available.</td>
 </tr>
 </tbody>
 </table>
