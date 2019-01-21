@@ -41,3 +41,4 @@ can have different set of custom options. For that see the [provider's overview]
 | tasks_mode | `str (enum)` | |  Possible values: `static`, `dynamic_branch` and `dynamic_message`. For explanation see [Task support](./usage.md#task-support). |
 | tasks_regex | `str` | | Python Regex that defines how the task's name or ID. It needs to contain capturing group with name `task`. |
 | tasks_value | `str` | | In case of `static` mode, the name or ID to be used. |
+| update_check | `bool` | True | giTrack will check upon invocation if there is a newer version available. |

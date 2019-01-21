@@ -128,11 +128,14 @@ def save_store(*args, **kwargs):
     ctx = click.get_current_context()
 
     if ctx.obj.get('config'):
-        ctx.obj['config'].store.save()
+        config = ctx.obj.get('config')
+        config.store.save()
 
-    # We don't want to pollute certain invocations
-    if ctx.invoked_subcommand not in {'prompt', 'hooks'}:
-        helpers.check_version()
+        # We don't want to pollute certain invocations
+        if ctx.invoked_subcommand not in {'prompt', 'hooks'} \
+            and config.update_check:
+            
+            helpers.check_version()
 
 
 @cli.command(short_help='Starts time tracking')

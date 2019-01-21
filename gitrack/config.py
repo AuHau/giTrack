@@ -205,9 +205,12 @@ class Config:
     provider = None
     project_support = False
     tasks_support = False
+    update_check = True
 
     INI_MAPPING = {
         'provider': IniEntry('gitrack', Providers),
+
+        'update_check': IniEntry('gitrack', bool),
 
         'project_support': IniEntry('gitrack', bool),
         'project': IniEntry('gitrack', str),
