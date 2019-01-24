@@ -16,7 +16,7 @@ class TestHooks:
         result, _ = cmd('hooks post-commit')
         assert result.exit_code == 0
 
-        ProviderForTesting.stop.assert_called_once_with(mock.ANY, 'Some message', force=False, project=None, task=None)
+        ProviderForTesting.stop.assert_called_once_with(mock.ANY, 'Some message', force=False, task=None)
         ProviderForTesting.start.assert_called_once_with(mock.ANY)
 
     def test_ignored_non_running_repos(self, cmd, mocker, commit):
@@ -44,7 +44,7 @@ class TestHooks:
         result, _ = cmd('hooks post-commit', config='task_static.config')
         assert result.exit_code == 0
 
-        ProviderForTesting.stop.assert_called_once_with(mock.ANY, 'Some message', force=False, project=None, task='some task name')
+        ProviderForTesting.stop.assert_called_once_with(mock.ANY, 'Some message', force=False, task='some task name')
         ProviderForTesting.start.assert_called_once_with(mock.ANY)
 
     def test_task_dynamic_branch(self, cmd, mocker, commit):
@@ -58,7 +58,7 @@ class TestHooks:
         result, _ = cmd('hooks post-commit', config='task_dynamic_branch.config')
         assert result.exit_code == 0
 
-        ProviderForTesting.stop.assert_called_once_with(mock.ANY, 'Some message', force=False, project=None, task=123)
+        ProviderForTesting.stop.assert_called_once_with(mock.ANY, 'Some message', force=False, task=123)
         ProviderForTesting.start.assert_called_once_with(mock.ANY)
 
     def test_task_dynamic_commit(self, cmd, mocker, commit):
@@ -72,19 +72,5 @@ class TestHooks:
         result, _ = cmd('hooks post-commit', config='task_dynamic_commit.config')
         assert result.exit_code == 0
 
-        ProviderForTesting.stop.assert_called_once_with(mock.ANY, '#321 Some message', force=False, project=None, task=321)
-        ProviderForTesting.start.assert_called_once_with(mock.ANY)
-
-    def test_project(self, cmd, mocker, commit):
-        result, _ = cmd('start', git_inited=True)
-        assert result.exit_code == 0
-
-        mocker.spy(ProviderForTesting, 'stop')
-        mocker.spy(ProviderForTesting, 'start')
-
-        commit('Some message')
-        result, _ = cmd('hooks post-commit', config='project.config')
-        assert result.exit_code == 0
-
-        ProviderForTesting.stop.assert_called_once_with(mock.ANY, 'Some message', force=False, project=123, task=None)
+        ProviderForTesting.stop.assert_called_once_with(mock.ANY, '#321 Some message', force=False, task=321)
         ProviderForTesting.start.assert_called_once_with(mock.ANY)

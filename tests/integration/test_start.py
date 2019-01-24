@@ -1,7 +1,8 @@
 from time import sleep
+from unittest import mock
 
 from gitrack import config
-from .helpers import repo_data_dir
+from .helpers import repo_data_dir, ProviderForTesting
 
 
 class TestStart:
@@ -35,3 +36,12 @@ class TestStart:
         status_file = repo_data_dir(repo_dir) / 'status'
         start_timestamp = int(status_file.read_text())
         assert original_start_timestamp == start_timestamp
+
+    def test_project(self, cmd, mocker):
+        mocker.spy(ProviderForTesting, 'stop')
+        mocker.spy(ProviderForTesting, 'start')
+
+        result, _ = cmd('start', config='project.config')
+        assert result.exit_code == 0
+
+        ProviderForTesting.start.assert_called_once_with(mock.ANY, project=123, force=False)

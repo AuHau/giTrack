@@ -42,11 +42,11 @@ class ProviderForTesting(AbstractProvider):
     def init(cls):
         pass
 
-    def start(self, force=False):
+    def start(self, project=None, force=False):
         super().start(force)
 
-    def stop(self, description, task=None, project=None, force=False):
-        super().stop(description, task, project, force)
+    def stop(self, description, task=None, force=False):
+        super().stop(description, task, force)
 
     def cancel(self):
         super().cancel()
