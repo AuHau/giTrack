@@ -39,7 +39,7 @@ class AbstractProvider(abc.ABC):
         return self.config.repo_data_dir / 'status'
 
     @abc.abstractmethod
-    def start(self, force=False):  # type: (bool) -> None
+    def start(self, project=None, force=False):  # type: (typing.Union[str, int], bool) -> None
         """
         Method called when the user start tracking session, or when commit was detected and the last running was ended
         and a new time entry was started.
@@ -48,6 +48,8 @@ class AbstractProvider(abc.ABC):
 
         :param force: If something prevented to create new time entry, this parameter should allow user to
                       override any checks and enforce start of the new time entry.
+        :param project: ID or name of the Project that should be assigned to the time entry.
+                        Can be ignored if support_projects==False.
         :return: None
         """
         self.config.store['running'] = True
@@ -57,7 +59,7 @@ class AbstractProvider(abc.ABC):
 
     @abc.abstractmethod
     def stop(self, description, task=None,
-             project=None, force=False):  # type: (str, typing.Union[str, int], typing.Union[str, int], bool) -> None
+             force=False):  # type: (str, typing.Union[str, int], bool) -> None
         """
         Method called when a commit was detected and the currently running time entry is supposed be saved.
 
@@ -66,8 +68,6 @@ class AbstractProvider(abc.ABC):
         :param description: The commit message that should serve as description of the time entry.
         :param task: ID or name of the Task that should be assigned to the time entry.
                      Can be ignored if support_tasks==False.
-        :param project:ID or name of the Project that should be assigned to the time entry.
-                       Can be ignored if support_projects==False.
         :param force: If something prevented to save the current time entry, this parameter should allow user to
                       override any checks and enforce save of the time entry.
         :return: None

@@ -139,17 +139,26 @@ def start(ctx, force):
     """
     Starts the time tracking.
     """
-    logger.debug("What does Store things about this repo? Is it currently running?: {}"
+    logger.debug("Repo is running: {}"
                  .format(ctx.obj['config'].store['running']))
+
+    config = ctx.obj['config']
     if not ctx.obj['config'].store['running']:
+        project = None
+        if config.project_support:
+            try:
+                project = int(config.project)
+            except ValueError:
+                project = config.project
+
         try:
-            ctx.obj['provider'].start(force)
+            ctx.obj['provider'].start(project=project, force=force)
         except exceptions.RunningEntry:
             overwrite = inquirer.shortcuts.confirm('There is currently running time entry that '
                                                    'will be overwritten, do you want to continue?', default=False)
 
             if overwrite:
-                ctx.obj['provider'].start(force=True)
+                ctx.obj['provider'].start(project=project, force=True)
 
 
 @cli.command(short_help='Stops time tracking')
@@ -234,17 +243,11 @@ def hooks_post_commit(ctx, force):
     commit = repo.head.commit
     message = commit.message.strip()
 
-    task = project = None
+    task = None
     if config.tasks_support:
         task = helpers.get_task(config, repo)
 
-    if config.project_support:
-        try:
-            project = int(config.project)
-        except ValueError:
-            project = config.project
-
-    provider.stop(message, task=task, project=project, force=force)
+    provider.stop(message, task=task, force=force)
     provider.start()
     ctx.obj['config'].store['since'] = datetime.now()
 
