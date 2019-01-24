@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import traceback
 from datetime import datetime
 
@@ -96,26 +97,18 @@ def cli(ctx, quiet, verbose):
     repo_dir = helpers.get_repo_dir()
     ctx.obj['repo_dir'] = repo_dir
 
-    main_logger = logging.getLogger('gitrack')
-    main_logger.setLevel(logging.DEBUG)
-
-    # Logging to Stderr
-    default = logging.StreamHandler()
-    default_formatter = logging.Formatter('%(levelname)s: %(message)s')
-    default.setFormatter(default_formatter)
-
-    if verbose == 1:
-        default.setLevel(logging.INFO)
-    elif verbose == 2:
-        default.setLevel(logging.DEBUG)
+    if verbose == 0:
+        logging_level = logging.ERROR
+    elif verbose == 1:
+        logging_level = logging.INFO
     else:
-        default.setLevel(logging.ERROR)
+        logging_level = logging.DEBUG
 
     if quiet:
-        # TODO: [Q/Design] Is this good idea?
-        click.echo = lambda *args, **kwargs: None
-    else:
-        main_logger.addHandler(default)
+        sys.stdout = helpers.NoOutput()
+        sys.stderr = helpers.NoOutput()
+
+    logging.basicConfig(stream=sys.stderr, level=logging_level)
 
     if ctx.invoked_subcommand != 'init':
         ctx.obj['config'] = config_module.Config(repo_dir)

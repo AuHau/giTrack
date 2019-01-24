@@ -19,6 +19,11 @@ SHELLS_COMMANDS = {
 }
 
 
+class NoOutput:
+    def write(self):
+        pass
+
+
 def _folder_has_git(check_dir):  # type: (pathlib.Path) -> bool
     """
     Check if directory contains Git metadata folder
