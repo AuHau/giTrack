@@ -97,18 +97,7 @@ def cli(ctx, quiet, verbose):
     repo_dir = helpers.get_repo_dir()
     ctx.obj['repo_dir'] = repo_dir
 
-    if verbose == 0:
-        logging_level = logging.ERROR
-    elif verbose == 1:
-        logging_level = logging.INFO
-    else:
-        logging_level = logging.DEBUG
-
-    if quiet:
-        sys.stdout = helpers.NoOutput()
-        sys.stderr = helpers.NoOutput()
-
-    logging.basicConfig(stream=sys.stderr, level=logging_level)
+    helpers.setup_logging(-1 if quiet else verbose)
 
     if ctx.invoked_subcommand != 'init':
         ctx.obj['config'] = config_module.Config(repo_dir)
