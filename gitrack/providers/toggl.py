@@ -51,6 +51,10 @@ class TogglProvider(AbstractProvider):
             'tags': tags,
         }
 
+    def is_running(self):
+        current = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
+        return current is not None
+
     def start(self, project=None, force=False):
         current = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
 

@@ -8,6 +8,7 @@ from gitrack import config as config_module
 
 logger = logging.getLogger('gitrack.provider.abstract')
 
+
 class AbstractProvider(abc.ABC):
 
     support_projects = False
@@ -39,6 +40,17 @@ class AbstractProvider(abc.ABC):
         :rtype: pathlib.Path
         """
         return self.config.repo_data_dir / 'status'
+
+    @abc.abstractmethod
+    def is_running(self):  # type: () -> bool
+        """
+        Method for getting information if there is currently running some time entry.
+        Does not have to be time entry started by giTrack. Depends on the Provider's capabilities, for example if
+        supports multiple running entries etc.
+
+        :return: True if there is currently running time entry
+        """
+        pass
 
     @abc.abstractmethod
     def start(self, project=None, force=False):  # type: (typing.Union[str, int], bool) -> None

@@ -166,6 +166,26 @@ def stop(ctx, cancel, description):
             ctx.obj['provider'].stop(description)
 
 
+@cli.command(short_help='Display status information for the repo')
+@click.pass_context
+def status(ctx):
+    """
+    Stops the time tracking with message if provided.
+    """
+    config = ctx.obj['config']
+    provider = ctx.obj['provider']
+
+    click.echo("""running: {}
+running since: {}
+provider: {}
+provider has running entry: {}""".format(
+        config.store['running'],
+        config.store['since'] or '',
+        config.provider,
+        provider.is_running(),
+    ))
+
+
 @cli.command(short_help='Initialize Git repo for time tracking')
 @click.option('--check', is_flag=True, help='Instead of initializing the repo, checks whether it has '
                                             'been initialized before. If not exits the command with exit code 2')
