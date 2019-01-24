@@ -79,6 +79,7 @@ class TogglProvider(AbstractProvider):
         entry = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
 
         if entry is None:
+            super().stop(description, task, force)
             return
 
         entry.description = description
@@ -99,11 +100,11 @@ class TogglProvider(AbstractProvider):
         super().stop(description, task, force)
 
     def cancel(self):
-        super().cancel()
-
         entry = api.TimeEntry.objects.current(config=self.toggl_config)  # type: api.TimeEntry
 
         if entry is None:
             return
 
         entry.delete(config=self.toggl_config)
+
+        super().cancel()

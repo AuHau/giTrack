@@ -1,10 +1,12 @@
 import abc
 import datetime
+import logging
 import time
 import typing
 
 from gitrack import config as config_module
 
+logger = logging.getLogger('gitrack.provider.abstract')
 
 class AbstractProvider(abc.ABC):
 
@@ -76,6 +78,7 @@ class AbstractProvider(abc.ABC):
         self.config.store['since'] = None
 
         self._status_file.write_text('')
+        logger.debug('Writing stopped metadata to status file and Store.')
 
     @abc.abstractmethod
     def cancel(self):
