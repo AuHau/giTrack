@@ -45,7 +45,7 @@ $ curl https://raw.githubusercontent.com/AuHau/gitrack/master/bin/install.sh | b
 
 ## Usage
 
-For full overview of giTrack's capabilities please see [full documentation](https://gitrack.adam-uhlir.me).
+For full overview of giTrack's capabilities please see [full documentation](https://gitrack.uhlir.dev).
 
 ```shell
 # Initialize Git repo for giTrack's usage
