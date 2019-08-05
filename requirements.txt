@@ -1,4 +1,4 @@
-gitpython==2.1.11
+gitpython==2.1.13
 click==7.0
 appdirs==1.4.3
 togglCli==2.0.2
