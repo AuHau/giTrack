@@ -5,4 +5,4 @@ togglCli==2.2.0
 inquirer==2.7.0
 click-completion==0.5.2
 pbr==5.4.5
-requests==2.21.0
+requests==2.24.0
