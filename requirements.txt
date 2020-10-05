@@ -4,5 +4,5 @@ appdirs==1.4.4
 togglCli==2.3.0
 inquirer==2.7.0
 click-completion==0.5.2
-pbr==5.1.1
+pbr==5.5.0
 requests==2.21.0
