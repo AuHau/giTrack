@@ -1,7 +1,7 @@
 gitpython==3.1.26
 click==8.0.3
 appdirs==1.4.4
-togglCli==2.0.2
+togglCli==2.4.3
 inquirer==2.5.1
 click-completion==0.5.0
 pbr==5.1.1
