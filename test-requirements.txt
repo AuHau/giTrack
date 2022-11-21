@@ -4,4 +4,4 @@ pytest-mock==3.10.0
 pytest-cov==4.0.0
 factory_boy==3.2.1
 mkdocs-material==8.5.10
-mkdocs==1.0.4
+mkdocs==1.4.2
